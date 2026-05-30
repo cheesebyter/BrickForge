@@ -1,0 +1,170 @@
+{
+  "version": 3,
+  "targets": {
+    "net9.0": {
+      "BrickForge.Ai/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "BrickForge.Core": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/BrickForge.Ai.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/BrickForge.Ai.dll": {}
+        }
+      },
+      "BrickForge.BrickGraph/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "BrickForge.Core": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/BrickForge.BrickGraph.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/BrickForge.BrickGraph.dll": {}
+        }
+      },
+      "BrickForge.Core/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "compile": {
+          "bin/placeholder/BrickForge.Core.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/BrickForge.Core.dll": {}
+        }
+      },
+      "BrickForge.Export/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "BrickForge.BrickGraph": "1.0.0",
+          "BrickForge.Core": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/BrickForge.Export.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/BrickForge.Export.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "BrickForge.Ai/1.0.0": {
+      "type": "project",
+      "path": "../BrickForge.Ai/BrickForge.Ai.csproj",
+      "msbuildProject": "../BrickForge.Ai/BrickForge.Ai.csproj"
+    },
+    "BrickForge.BrickGraph/1.0.0": {
+      "type": "project",
+      "path": "../BrickForge.BrickGraph/BrickForge.BrickGraph.csproj",
+      "msbuildProject": "../BrickForge.BrickGraph/BrickForge.BrickGraph.csproj"
+    },
+    "BrickForge.Core/1.0.0": {
+      "type": "project",
+      "path": "../BrickForge.Core/BrickForge.Core.csproj",
+      "msbuildProject": "../BrickForge.Core/BrickForge.Core.csproj"
+    },
+    "BrickForge.Export/1.0.0": {
+      "type": "project",
+      "path": "../BrickForge.Export/BrickForge.Export.csproj",
+      "msbuildProject": "../BrickForge.Export/BrickForge.Export.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net9.0": [
+      "BrickForge.Ai >= 1.0.0",
+      "BrickForge.BrickGraph >= 1.0.0",
+      "BrickForge.Core >= 1.0.0",
+      "BrickForge.Export >= 1.0.0"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\Andy\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "E:\\Project\\BrickForge\\src\\BrickForge.Cli\\BrickForge.Cli.csproj",
+      "projectName": "BrickForge.Cli",
+      "projectPath": "E:\\Project\\BrickForge\\src\\BrickForge.Cli\\BrickForge.Cli.csproj",
+      "packagesPath": "C:\\Users\\Andy\\.nuget\\packages\\",
+      "outputPath": "E:\\Project\\BrickForge\\src\\BrickForge.Cli\\obj\\",
+      "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
+      "configFilePaths": [
+        "C:\\Users\\Andy\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net9.0"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "projectReferences": {
+            "E:\\Project\\BrickForge\\src\\BrickForge.Ai\\BrickForge.Ai.csproj": {
+              "projectPath": "E:\\Project\\BrickForge\\src\\BrickForge.Ai\\BrickForge.Ai.csproj"
+            },
+            "E:\\Project\\BrickForge\\src\\BrickForge.BrickGraph\\BrickForge.BrickGraph.csproj": {
+              "projectPath": "E:\\Project\\BrickForge\\src\\BrickForge.BrickGraph\\BrickForge.BrickGraph.csproj"
+            },
+            "E:\\Project\\BrickForge\\src\\BrickForge.Core\\BrickForge.Core.csproj": {
+              "projectPath": "E:\\Project\\BrickForge\\src\\BrickForge.Core\\BrickForge.Core.csproj"
+            },
+            "E:\\Project\\BrickForge\\src\\BrickForge.Export\\BrickForge.Export.csproj": {
+              "projectPath": "E:\\Project\\BrickForge\\src\\BrickForge.Export\\BrickForge.Export.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "10.0.100"
+    },
+    "frameworks": {
+      "net9.0": {
+        "targetAlias": "net9.0",
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

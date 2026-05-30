@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "BrickForge.Ai/1.0.0": {
+        "dependencies": {
+          "BrickForge.Core": "1.0.0"
+        },
+        "runtime": {
+          "BrickForge.Ai.dll": {}
+        }
+      },
+      "BrickForge.Core/1.0.0": {
+        "runtime": {
+          "BrickForge.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "BrickForge.Ai/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "BrickForge.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

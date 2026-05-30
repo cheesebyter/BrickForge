@@ -1,0 +1,91 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "BrickForge.Cli/1.0.0": {
+        "dependencies": {
+          "BrickForge.Ai": "1.0.0",
+          "BrickForge.BrickGraph": "1.0.0",
+          "BrickForge.Core": "1.0.0",
+          "BrickForge.Export": "1.0.0"
+        },
+        "runtime": {
+          "BrickForge.Cli.dll": {}
+        }
+      },
+      "BrickForge.Ai/1.0.0": {
+        "dependencies": {
+          "BrickForge.Core": "1.0.0"
+        },
+        "runtime": {
+          "BrickForge.Ai.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "BrickForge.BrickGraph/1.0.0": {
+        "dependencies": {
+          "BrickForge.Core": "1.0.0"
+        },
+        "runtime": {
+          "BrickForge.BrickGraph.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "BrickForge.Core/1.0.0": {
+        "runtime": {
+          "BrickForge.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "BrickForge.Export/1.0.0": {
+        "dependencies": {
+          "BrickForge.BrickGraph": "1.0.0",
+          "BrickForge.Core": "1.0.0"
+        },
+        "runtime": {
+          "BrickForge.Export.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "BrickForge.Cli/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "BrickForge.Ai/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "BrickForge.BrickGraph/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "BrickForge.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "BrickForge.Export/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

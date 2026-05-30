@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BrickForge.Ai/BrickForge.Ai.csproj" />
+    <Project Path="src/BrickForge.BrickGraph/BrickForge.BrickGraph.csproj" />
+    <Project Path="src/BrickForge.Cli/BrickForge.Cli.csproj" />
+    <Project Path="src/BrickForge.Core/BrickForge.Core.csproj" />
+    <Project Path="src/BrickForge.Export/BrickForge.Export.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BrickForge.BrickGraph.Tests/BrickForge.BrickGraph.Tests.csproj" />
+    <Project Path="tests/BrickForge.Core.Tests/BrickForge.Core.Tests.csproj" />
+    <Project Path="tests/BrickForge.Export.Tests/BrickForge.Export.Tests.csproj" />
+  </Folder>
+</Solution>
