@@ -17,4 +17,10 @@ public sealed class OllamaOptions
 
     /// <summary>Sampling temperature passed to the model (0.0–1.0). Lower values produce more deterministic output.</summary>
     public double Temperature { get; init; } = 0.2;
+
+    /// <summary>
+    /// When true, uses a local mock instead of calling the Ollama HTTP API.
+    /// No network calls are made. Intended for offline testing and CI runs.
+    /// </summary>
+    public bool MockMode { get; init; } = false;
 }

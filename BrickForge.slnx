@@ -11,5 +11,6 @@
     <Project Path="tests/BrickForge.BrickGraph.Tests/BrickForge.BrickGraph.Tests.csproj" />
     <Project Path="tests/BrickForge.Core.Tests/BrickForge.Core.Tests.csproj" />
     <Project Path="tests/BrickForge.Export.Tests/BrickForge.Export.Tests.csproj" />
+    <Project Path="tests/BrickForge.Integration.Tests/BrickForge.Integration.Tests.csproj" />
   </Folder>
 </Solution>

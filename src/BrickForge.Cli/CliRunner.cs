@@ -1,5 +1,9 @@
 using BrickForge.Ai;
 using BrickForge.Ai.Analysis;
+using BrickForge.BrickGraph.Generation;
+using BrickForge.BrickGraph.Parts;
+using BrickForge.BrickGraph.Templates;
+using BrickForge.BrickGraph.Validation;
 using BrickForge.Core.Options;
 using Microsoft.Extensions.Configuration;
 
@@ -22,22 +26,72 @@ public static class CliRunner
 
         var (ollamaOptions, generationOptions) = LoadConfiguration();
 
-        var httpClient = new HttpClient
-        {
-            BaseAddress = new Uri(ollamaOptions.BaseUrl),
-            Timeout = TimeSpan.FromSeconds(ollamaOptions.TimeoutSeconds)
-        };
+        IOllamaClient ollamaClient;
 
-        var ollamaClient = new OllamaClient(httpClient, ollamaOptions);
+        if (ollamaOptions.MockMode)
+        {
+            ollamaClient = new MockOllamaClient();
+            Console.WriteLine("[info] MockMode enabled — no Ollama calls will be made.");
+        }
+        else
+        {
+            var httpClient = new HttpClient
+            {
+                BaseAddress = new Uri(ollamaOptions.BaseUrl),
+                Timeout = TimeSpan.FromSeconds(ollamaOptions.TimeoutSeconds)
+            };
+            ollamaClient = new OllamaClient(httpClient, ollamaOptions);
+        }
+
         var promptAnalyzer = new PromptAnalysisService(ollamaClient, ollamaOptions, generationOptions);
 
         return args[0].ToLowerInvariant() switch
         {
             "health" => await HealthCommand.RunAsync(ollamaClient),
-            "generate" => await GenerateCommand.RunAsync(args[1..], promptAnalyzer, generationOptions),
+            "generate" => await RunGenerateAsync(args[1..], promptAnalyzer, ollamaOptions, generationOptions),
             "--help" or "-h" or "help" => RunHelp(),
             _ => RunUnknown(args[0])
         };
+    }
+
+    private static async Task<int> RunGenerateAsync(
+        string[] args,
+        IPromptAnalyzer promptAnalyzer,
+        OllamaOptions ollamaOptions,
+        GenerationOptions generationOptions)
+    {
+        var baseDir = AppContext.BaseDirectory;
+        var partsDir = Path.Combine(baseDir, "data", "parts");
+
+        SupportedPartsRegistry registry;
+        TemplateRegistry templateRegistry;
+
+        try
+        {
+            var partsJson = await File.ReadAllTextAsync(Path.Combine(partsDir, "supported-parts.json"));
+            var colorsJson = await File.ReadAllTextAsync(Path.Combine(partsDir, "supported-colors.json"));
+            var templateJson = await File.ReadAllTextAsync(Path.Combine(partsDir, "small_machine_template.json"));
+
+            registry = SupportedPartsRegistry.FromJson(partsJson, colorsJson);
+            templateRegistry = TemplateRegistry.FromJson(templateJson);
+        }
+        catch (IOException ex)
+        {
+            Console.Error.WriteLine($"Failed to load data files from '{partsDir}': {ex.Message}");
+            return 1;
+        }
+
+        var generator = new SmallMachineGenerator(registry);
+        var validator = new BrickGraphValidator(registry);
+
+        return await GenerateCommand.RunAsync(
+            args,
+            promptAnalyzer,
+            generator,
+            validator,
+            templateRegistry,
+            generationOptions,
+            ollamaOptions.Model);
     }
 
     private static (OllamaOptions ollama, GenerationOptions generation) LoadConfiguration()

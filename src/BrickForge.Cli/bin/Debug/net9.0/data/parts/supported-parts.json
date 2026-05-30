@@ -1,0 +1,16 @@
+[
+  { "part_number": "3005", "part_name": "Brick 1 x 1" },
+  { "part_number": "3004", "part_name": "Brick 1 x 2" },
+  { "part_number": "3622", "part_name": "Brick 1 x 3" },
+  { "part_number": "3010", "part_name": "Brick 1 x 4" },
+  { "part_number": "3003", "part_name": "Brick 2 x 2" },
+  { "part_number": "3002", "part_name": "Brick 2 x 3" },
+  { "part_number": "3001", "part_name": "Brick 2 x 4" },
+  { "part_number": "3024", "part_name": "Plate 1 x 1" },
+  { "part_number": "3023", "part_name": "Plate 1 x 2" },
+  { "part_number": "3710", "part_name": "Plate 1 x 4" },
+  { "part_number": "3022", "part_name": "Plate 2 x 2" },
+  { "part_number": "3020", "part_name": "Plate 2 x 4" },
+  { "part_number": "3069b", "part_name": "Tile 1 x 2 with Groove" },
+  { "part_number": "2431", "part_name": "Tile 1 x 4 with Groove" }
+]

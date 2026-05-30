@@ -32,3 +32,6 @@ E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.F
 E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.FileProviders.Physical.dll
 E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.FileSystemGlobbing.dll
 E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.Primitives.dll
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\data\parts\supported-parts.json
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\data\parts\supported-colors.json
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\data\parts\small_machine_template.json
