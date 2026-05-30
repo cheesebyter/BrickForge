@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>BrickForge.Api</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BrickForge.Core\BrickForge.Core.csproj" />
+    <ProjectReference Include="..\BrickForge.Ai\BrickForge.Ai.csproj" />
+    <ProjectReference Include="..\BrickForge.BrickGraph\BrickForge.BrickGraph.csproj" />
+    <ProjectReference Include="..\BrickForge.Export\BrickForge.Export.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
+  </ItemGroup>
+
+</Project>
