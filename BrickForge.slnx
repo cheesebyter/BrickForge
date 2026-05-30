@@ -7,6 +7,7 @@
     <Project Path="src/BrickForge.Export/BrickForge.Export.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/BrickForge.Ai.Tests/BrickForge.Ai.Tests.csproj" />
     <Project Path="tests/BrickForge.BrickGraph.Tests/BrickForge.BrickGraph.Tests.csproj" />
     <Project Path="tests/BrickForge.Core.Tests/BrickForge.Core.Tests.csproj" />
     <Project Path="tests/BrickForge.Export.Tests/BrickForge.Export.Tests.csproj" />

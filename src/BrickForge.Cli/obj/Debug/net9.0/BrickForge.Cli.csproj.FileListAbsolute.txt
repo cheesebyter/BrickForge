@@ -22,3 +22,13 @@ E:\Project\BrickForge\src\BrickForge.Cli\obj\Debug\net9.0\refint\BrickForge.Cli.
 E:\Project\BrickForge\src\BrickForge.Cli\obj\Debug\net9.0\BrickForge.Cli.pdb
 E:\Project\BrickForge\src\BrickForge.Cli\obj\Debug\net9.0\BrickForge.Cli.genruntimeconfig.cache
 E:\Project\BrickForge\src\BrickForge.Cli\obj\Debug\net9.0\ref\BrickForge.Cli.dll
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\appsettings.json
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.Configuration.dll
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.Configuration.Abstractions.dll
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.Configuration.Binder.dll
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.Configuration.FileExtensions.dll
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.Configuration.Json.dll
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.FileProviders.Abstractions.dll
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.FileProviders.Physical.dll
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.FileSystemGlobbing.dll
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.Primitives.dll

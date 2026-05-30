@@ -1,8 +1,18 @@
 {
   "version": 2,
-  "dgSpecHash": "yDnb4rd/l0M=",
+  "dgSpecHash": "aaKQnEt+8kU=",
   "success": true,
   "projectFilePath": "E:\\Project\\BrickForge\\src\\BrickForge.Cli\\BrickForge.Cli.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\Andy\\.nuget\\packages\\microsoft.extensions.configuration\\9.0.0\\microsoft.extensions.configuration.9.0.0.nupkg.sha512",
+    "C:\\Users\\Andy\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\9.0.0\\microsoft.extensions.configuration.abstractions.9.0.0.nupkg.sha512",
+    "C:\\Users\\Andy\\.nuget\\packages\\microsoft.extensions.configuration.binder\\9.0.0\\microsoft.extensions.configuration.binder.9.0.0.nupkg.sha512",
+    "C:\\Users\\Andy\\.nuget\\packages\\microsoft.extensions.configuration.fileextensions\\9.0.0\\microsoft.extensions.configuration.fileextensions.9.0.0.nupkg.sha512",
+    "C:\\Users\\Andy\\.nuget\\packages\\microsoft.extensions.configuration.json\\9.0.0\\microsoft.extensions.configuration.json.9.0.0.nupkg.sha512",
+    "C:\\Users\\Andy\\.nuget\\packages\\microsoft.extensions.fileproviders.abstractions\\9.0.0\\microsoft.extensions.fileproviders.abstractions.9.0.0.nupkg.sha512",
+    "C:\\Users\\Andy\\.nuget\\packages\\microsoft.extensions.fileproviders.physical\\9.0.0\\microsoft.extensions.fileproviders.physical.9.0.0.nupkg.sha512",
+    "C:\\Users\\Andy\\.nuget\\packages\\microsoft.extensions.filesystemglobbing\\9.0.0\\microsoft.extensions.filesystemglobbing.9.0.0.nupkg.sha512",
+    "C:\\Users\\Andy\\.nuget\\packages\\microsoft.extensions.primitives\\9.0.0\\microsoft.extensions.primitives.9.0.0.nupkg.sha512"
+  ],
   "logs": []
 }

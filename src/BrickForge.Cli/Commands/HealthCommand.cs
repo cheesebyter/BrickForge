@@ -1,13 +1,28 @@
+using BrickForge.Ai;
+
 namespace BrickForge.Cli;
 
 /// <summary>
-/// Stub for the health command. Full implementation in BF-MVP0-003.
+/// Checks whether the local Ollama service is reachable and reports the status.
+/// Implements BF-MVP0-003.
 /// </summary>
 internal static class HealthCommand
 {
-    internal static Task<int> RunAsync(string[] args)
+    internal static async Task<int> RunAsync(IOllamaClient ollamaClient)
     {
-        Console.WriteLine("[health] Ollama health check not yet implemented (BF-MVP0-003).");
-        return Task.FromResult(0);
+        Console.WriteLine("Checking Ollama availability...");
+
+        var available = await ollamaClient.IsAvailableAsync();
+
+        if (available)
+        {
+            Console.WriteLine("Ollama: available");
+            return 0;
+        }
+
+        Console.Error.WriteLine("Ollama: not available");
+        Console.Error.WriteLine("Make sure Ollama is running on the configured address (default: http://localhost:11434).");
+        Console.Error.WriteLine("Start Ollama with: ollama serve");
+        return 1;
     }
 }

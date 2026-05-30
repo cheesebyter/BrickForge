@@ -1,3 +1,3 @@
 using BrickForge.Cli;
 
-await CliRunner.RunAsync(args);
+Environment.Exit(await CliRunner.RunAsync(args));
