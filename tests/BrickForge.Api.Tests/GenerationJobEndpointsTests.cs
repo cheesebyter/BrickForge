@@ -96,6 +96,37 @@ public sealed class GenerationJobEndpointsTests : IClassFixture<TestApiFactory>
     }
 
     [Fact]
+    public async Task GetJob_WithDifficulty_ReturnsDifficultyInResponse()
+    {
+        var request = new CreateJobRequest("Eine kleine Kaffeemaschine.", TargetParts: null, Difficulty: "beginner");
+        var createResp = await _client.PostAsJsonAsync("/api/generation-jobs", request);
+        Assert.Equal(HttpStatusCode.Created, createResp.StatusCode);
+        var created = await createResp.Content.ReadFromJsonAsync<CreateJobResponse>();
+        Assert.NotNull(created);
+
+        var response = await _client.GetAsync($"/api/generation-jobs/{created.JobId}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<JobStatusResponse>();
+        Assert.NotNull(body);
+        Assert.Equal("beginner", body.Difficulty);
+    }
+
+    [Fact]
+    public async Task GetJob_WithoutDifficulty_ReturnsDifficultyNull()
+    {
+        var request = new CreateJobRequest("Eine kleine Kaffeemaschine.");
+        var createResp = await _client.PostAsJsonAsync("/api/generation-jobs", request);
+        var created = await createResp.Content.ReadFromJsonAsync<CreateJobResponse>();
+        Assert.NotNull(created);
+
+        var response = await _client.GetAsync($"/api/generation-jobs/{created.JobId}");
+        var body = await response.Content.ReadFromJsonAsync<JobStatusResponse>();
+        Assert.NotNull(body);
+        Assert.Null(body.Difficulty);
+    }
+
+    [Fact]
     public async Task GetJob_WithUnknownId_Returns404()
     {
         var response = await _client.GetAsync("/api/generation-jobs/nonexistent-job-id");

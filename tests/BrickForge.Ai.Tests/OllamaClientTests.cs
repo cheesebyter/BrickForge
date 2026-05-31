@@ -146,7 +146,7 @@ public sealed class OllamaClientTests
         var options = new OllamaOptions
         {
             BaseUrl = "http://localhost:11434",
-            Model = "llama3.1:8b",
+            PlanningModel = "llama3.1:8b",
             TimeoutSeconds = 30,
             Temperature = 0.2
         };

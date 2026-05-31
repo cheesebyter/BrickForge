@@ -91,7 +91,7 @@ public static class CliRunner
             validator,
             templateRegistry,
             generationOptions,
-            ollamaOptions.Model);
+            ollamaOptions.PlanningModel);
     }
 
     private static (OllamaOptions ollama, GenerationOptions generation) LoadConfiguration()

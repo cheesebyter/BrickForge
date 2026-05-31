@@ -75,3 +75,5 @@ E:\Project\BrickForge\src\BrickForge.Api\bin\Debug\net9.0\data\parts\small_build
 E:\Project\BrickForge\src\BrickForge.Api\bin\Debug\net9.0\data\parts\small_vehicle_template.json
 E:\Project\BrickForge\src\BrickForge.Api\bin\Debug\net9.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
 E:\Project\BrickForge\src\BrickForge.Api\bin\Debug\net9.0\Microsoft.Extensions.Logging.Abstractions.dll
+E:\Project\BrickForge\src\BrickForge.Api\bin\Debug\net9.0\BrickForge.Api.staticwebassets.runtime.json
+E:\Project\BrickForge\src\BrickForge.Api\obj\Debug\net9.0\compressed\mc0k4quuwv-{0}-qli57z0vvt-qli57z0vvt.gz

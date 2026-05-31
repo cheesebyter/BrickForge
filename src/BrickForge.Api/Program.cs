@@ -10,6 +10,7 @@ using BrickForge.BrickGraph.Parts;
 using BrickForge.BrickGraph.Repair;
 using BrickForge.BrickGraph.Templates;
 using BrickForge.BrickGraph.Validation;
+using BrickForge.Core.Catalog;
 using BrickForge.Core.Jobs;
 using BrickForge.Core.Options;
 using BrickForge.Core.Pipelines;
@@ -26,6 +27,8 @@ builder.Services.Configure<ExportOptions>(
     builder.Configuration.GetSection("Export"));
 builder.Services.Configure<StorageOptions>(
     builder.Configuration.GetSection("Storage"));
+builder.Services.Configure<ExternalAiOptions>(
+    builder.Configuration.GetSection("ExternalAi"));
 
 // ── Ollama client ─────────────────────────────────────────────────────────────
 var ollamaOptsValue = builder.Configuration.GetSection("Ollama").Get<OllamaOptions>() ?? new OllamaOptions();
@@ -90,11 +93,13 @@ builder.Services.AddSingleton<IGenerationPipelineService, GenerationPipelineServ
 builder.Services.AddHostedService<GenerationJobWorker>();
 
 // ── Persistence ───────────────────────────────────────────────────────────────
-builder.Services.AddSingleton<IJobRepository>(sp =>
+builder.Services.AddSingleton<SqliteJobRepository>(sp =>
 {
     var storageOpts = sp.GetRequiredService<IOptions<StorageOptions>>().Value;
     return new SqliteJobRepository(storageOpts.ConnectionString);
 });
+builder.Services.AddSingleton<IJobRepository>(sp => sp.GetRequiredService<SqliteJobRepository>());
+builder.Services.AddSingleton<ICatalogRepository>(sp => sp.GetRequiredService<SqliteJobRepository>());
 
 // ── Swagger / OpenAPI ────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
@@ -122,6 +127,23 @@ builder.Services.AddHealthChecks()
     .AddCheck<OllamaHealthCheck>("ollama");
 
 var app = builder.Build();
+
+// ── BF-MVP1-023: Serve static SPA UI from wwwroot/ ────────────────────────────
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+// ── BF-MVP1-021: Seed catalog tables at startup ───────────────────────────────
+var catalogRepo = app.Services.GetRequiredService<ICatalogRepository>();
+var tplReg = app.Services.GetRequiredService<TemplateRegistry>();
+var partsReg = app.Services.GetRequiredService<SupportedPartsRegistry>();
+
+var templateEntries = tplReg.TemplateIds
+    .Select(id => new TemplateDefinitionEntry(id, id, "1.0", null));
+await catalogRepo.SeedTemplatesAsync(templateEntries);
+
+var partEntries = partsReg.SupportedPartNumbers
+    .Select(pn => new PartDefinitionEntry(pn, pn, pn, null, true));
+await catalogRepo.SeedPartsAsync(partEntries);
 
 if (app.Environment.IsDevelopment())
 {

@@ -55,7 +55,7 @@ public sealed class OllamaClient : IOllamaClient
         {
             var request = new OllamaGenerateRequest
             {
-                Model = _options.Model,
+                Model = _options.PlanningModel,
                 Prompt = userPrompt,
                 System = systemPrompt,
                 Stream = false,

@@ -44,6 +44,9 @@ public sealed class PromptAnalysisService : IPromptAnalyzer
         _fallback = new FallbackPromptAnalyzer(generationOptions);
     }
 
+    /// <summary>Maximum number of AI attempts before falling back to the deterministic analyser.</summary>
+    private const int MaxAiAttempts = 2;
+
     /// <inheritdoc />
     public async Task<Result<PromptAnalysisResult>> AnalyzeAsync(
         string userPrompt,
@@ -51,15 +54,24 @@ public sealed class PromptAnalysisService : IPromptAnalyzer
     {
         var userMessage = $"Benutzereingabe:\n{userPrompt}";
 
-        var generateResult = await _ollamaClient.GenerateAsync(
-            PromptTemplates.PromptAnalysisSystemPrompt,
-            userMessage,
-            cancellationToken);
+        PromptAnalysisDto? dto = null;
+        for (var attempt = 1; attempt <= MaxAiAttempts; attempt++)
+        {
+            var generateResult = await _ollamaClient.GenerateAsync(
+                PromptTemplates.PromptAnalysisSystemPrompt,
+                userMessage,
+                cancellationToken);
 
-        if (!generateResult.IsSuccess)
-            return Result<PromptAnalysisResult>.Success(_fallback.Analyze(userPrompt));
+            if (!generateResult.IsSuccess)
+                break;
 
-        var dto = TryParseDto(generateResult.Value!);
+            dto = TryParseDto(generateResult.Value!);
+            if (dto is not null)
+                break;
+
+            // Invalid JSON on first attempt – retry once before giving up.
+        }
+
         if (dto is null)
             return Result<PromptAnalysisResult>.Success(_fallback.Analyze(userPrompt));
 

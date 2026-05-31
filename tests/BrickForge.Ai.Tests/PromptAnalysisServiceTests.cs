@@ -20,7 +20,7 @@ public sealed class PromptAnalysisServiceTests
 
     private static readonly OllamaOptions DefaultOllamaOptions = new()
     {
-        Model = "llama3.1:8b",
+        PlanningModel = "llama3.1:8b",
         Temperature = 0.2
     };
 
@@ -192,6 +192,69 @@ public sealed class PromptAnalysisServiceTests
         Assert.NotNull(result.Value);
     }
 
+    // ── Retry behaviour (BF-MVP1-020 §20.3) ──────────────────────────────────
+
+    [Fact]
+    public async Task AnalyzeAsync_WhenFirstResponseInvalidJsonSecondValid_ReturnsSecondResult()
+    {
+        const string validJson = """
+            {
+              "model_name": "Retry Model",
+              "model_category": "small_machine",
+              "target_parts": 40,
+              "main_color": "blue",
+              "accent_color": "white",
+              "features": [],
+              "feasible": true,
+              "warnings": []
+            }
+            """;
+
+        var client = new SequencedFakeOllamaClient([
+            Result<string>.Success("not valid json at all"),
+            Result<string>.Success(validJson)
+        ]);
+        var service = new PromptAnalysisService(client, DefaultOllamaOptions, DefaultGenOptions);
+
+        var result = await service.AnalyzeAsync("Retry test");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Retry Model", result.Value!.ModelName);
+        Assert.False(result.Value.UsedFallback);
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_WhenBothAttemptsReturnInvalidJson_UsesFallback()
+    {
+        var client = new SequencedFakeOllamaClient([
+            Result<string>.Success("invalid json"),
+            Result<string>.Success("still invalid json")
+        ]);
+        var service = new PromptAnalysisService(client, DefaultOllamaOptions, DefaultGenOptions);
+
+        var result = await service.AnalyzeAsync("test");
+
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Value!.UsedFallback);
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_WhenFirstAttemptFailsNetworkSecondValid_UsesFallback()
+    {
+        // Network failure on first attempt — no retry for network errors (only invalid JSON retries)
+        var client = new SequencedFakeOllamaClient([
+            Result<string>.Failure("Network error"),
+            Result<string>.Success(BuildJson())
+        ]);
+        var service = new PromptAnalysisService(client, DefaultOllamaOptions, DefaultGenOptions);
+
+        var result = await service.AnalyzeAsync("test");
+
+        // Network errors break the loop immediately — fallback expected.
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Value!.UsedFallback);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static PromptAnalysisService BuildService(Result<string> generateResult)
@@ -246,4 +309,28 @@ internal sealed class FakeOllamaClient : IOllamaClient
         string userPrompt,
         CancellationToken cancellationToken = default) =>
         Task.FromResult(_generateResult);
+}
+
+/// <summary>
+/// Returns results from a fixed queue, allowing tests to simulate retry scenarios.
+/// </summary>
+internal sealed class SequencedFakeOllamaClient : IOllamaClient
+{
+    private readonly Queue<Result<string>> _results;
+
+    public SequencedFakeOllamaClient(IEnumerable<Result<string>> results)
+    {
+        _results = new Queue<Result<string>>(results);
+    }
+
+    public Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(true);
+
+    public Task<Result<string>> GenerateAsync(
+        string systemPrompt,
+        string userPrompt,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_results.Count > 0
+            ? _results.Dequeue()
+            : Result<string>.Failure("No more queued results."));
 }

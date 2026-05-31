@@ -16,6 +16,7 @@ public sealed record JobStatusResponse(
     string JobId,
     string Status,
     string? TemplateName,
+    string? Difficulty,
     int? TargetParts,
     int? ActualParts,
     double? ValidationScore,

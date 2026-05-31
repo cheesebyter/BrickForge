@@ -131,5 +131,51 @@ public sealed class SqliteJobRepositoryTests
         Assert.Contains(updated.Files, f => f.FileType == "model.mpd");
         Assert.Contains(updated.Files, f => f.FileType == "parts.csv");
     }
+
+    // ── BF-MVP1-022: Difficulty field ─────────────────────────────────────────
+
+    [Fact]
+    public async Task CreateAsync_WithDifficulty_PersistsDifficulty()
+    {
+        var repo = CreateRepo();
+        var job = MakeJob("prompt");
+        job.Difficulty = "beginner";
+
+        await repo.CreateAsync(job);
+
+        var retrieved = await repo.GetByIdAsync(job.Id);
+        Assert.NotNull(retrieved);
+        Assert.Equal("beginner", retrieved.Difficulty);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WhenDifficultyChanges_PersistsUpdatedDifficulty()
+    {
+        var repo = CreateRepo();
+        var job = MakeJob("prompt");
+        job.Difficulty = "beginner";
+        await repo.CreateAsync(job);
+
+        job.Difficulty = "advanced";
+        await repo.UpdateAsync(job);
+
+        var updated = await repo.GetByIdAsync(job.Id);
+        Assert.NotNull(updated);
+        Assert.Equal("advanced", updated.Difficulty);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithNullDifficulty_PersistsNull()
+    {
+        var repo = CreateRepo();
+        var job = MakeJob("prompt");
+        // Difficulty not set → null
+
+        await repo.CreateAsync(job);
+
+        var retrieved = await repo.GetByIdAsync(job.Id);
+        Assert.NotNull(retrieved);
+        Assert.Null(retrieved.Difficulty);
+    }
 }
 

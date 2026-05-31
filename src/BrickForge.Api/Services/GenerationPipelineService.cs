@@ -10,6 +10,7 @@ using BrickForge.Core.Pipelines;
 using BrickForge.Export;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Diagnostics;
 
 namespace BrickForge.Api.Services;
 
@@ -51,6 +52,7 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
     public async Task RunAsync(string jobId, CancellationToken cancellationToken = default)
     {
         using var scope = _logger.BeginScope(new { JobId = jobId });
+        var totalStopwatch = Stopwatch.StartNew();
 
         var job = await _jobs.GetByIdAsync(jobId, cancellationToken);
         if (job is null)
@@ -61,11 +63,26 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
 
         try
         {
+            _logger.LogInformation("Job {JobId} started.", jobId);
+
+            // BF-MVP1-019 §19.5: Validate prompt length before any AI call.
+            if (job.Prompt.Length > _generationOptions.MaxPromptLength)
+            {
+                await FailJobAsync(job,
+                    $"Prompt exceeds maximum length of {_generationOptions.MaxPromptLength} characters.",
+                    cancellationToken);
+                return;
+            }
+
             // Step 1: Analyze prompt
             job.Status = JobStatus.AnalyzingPrompt;
             await _jobs.UpdateAsync(job, cancellationToken);
 
+            _logger.LogDebug("Prompt analysis starting for job {JobId}.", jobId);
+            var sw = Stopwatch.StartNew();
             var analysisResult = await _promptAnalyzer.AnalyzeAsync(job.Prompt, cancellationToken);
+            sw.Stop();
+            _logger.LogDebug("Prompt analysis completed in {ElapsedMs} ms.", sw.ElapsedMilliseconds);
             if (!analysisResult.IsSuccess)
             {
                 await FailJobAsync(job, analysisResult.ErrorMessage ?? "Prompt analysis failed.", cancellationToken);
@@ -101,17 +118,25 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
                 return;
             }
 
+            _logger.LogInformation("Template selected: {TemplateName} for job {JobId}.", template.TemplateId, jobId);
+
             // Step 3: Generate BrickGraph
             job.Status = JobStatus.GeneratingBrickGraph;
             await _jobs.UpdateAsync(job, cancellationToken);
 
+            sw.Restart();
             var graph = _generator.Generate(analysis, template);
+            sw.Stop();
+            _logger.LogDebug("BrickGraph generation completed in {ElapsedMs} ms.", sw.ElapsedMilliseconds);
 
             // Step 4: Validate
             job.Status = JobStatus.Validating;
             await _jobs.UpdateAsync(job, cancellationToken);
 
+            sw.Restart();
             var validation = _validator.Validate(graph, template.MaxParts > 0 ? template.MaxParts : null);
+            sw.Stop();
+            _logger.LogDebug("Validation completed in {ElapsedMs} ms.", sw.ElapsedMilliseconds);
             var wasRepaired = false;
 
             // Step 4b: Repair if validation failed
@@ -148,6 +173,8 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
                 await FailJobAsync(job, "Validation failed: high-severity issues detected.", cancellationToken);
                 return;
             }
+
+            _logger.LogInformation("Validation passed for job {JobId}: score={Score:F4}.", jobId, validation.Score);
 
             // Step 5: Export
             job.Status = JobStatus.Exporting;
@@ -251,7 +278,9 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
                 : JobStatus.Completed;
             await _jobs.UpdateAsync(job, cancellationToken);
 
-            _logger.LogInformation("Job {JobId} completed with {FileCount} file(s).", jobId, generatedFileNames.Count);
+            totalStopwatch.Stop();
+            _logger.LogInformation("Job {JobId} completed with {FileCount} file(s) in {ElapsedMs} ms.",
+                jobId, generatedFileNames.Count, totalStopwatch.ElapsedMilliseconds);
         }
         catch (OperationCanceledException)
         {

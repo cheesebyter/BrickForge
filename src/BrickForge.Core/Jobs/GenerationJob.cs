@@ -12,6 +12,7 @@ public sealed class GenerationJob
     public JobStatus Status { get; set; } = JobStatus.Queued;
 
     public string? TemplateName { get; set; }
+    public string? Difficulty { get; set; }
     public int? TargetParts { get; set; }
     public int? ActualParts { get; set; }
     public string? OutputPath { get; set; }

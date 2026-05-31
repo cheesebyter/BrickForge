@@ -180,7 +180,7 @@ public sealed class FullGenerationPipelineTests : IDisposable
             OutputRoot = _tempDir
         };
 
-        var ollamaOptions = new OllamaOptions { Model = "test-model", Temperature = 0.2 };
+        var ollamaOptions = new OllamaOptions { PlanningModel = "test-model", Temperature = 0.2 };
 
         var promptAnalyzer = new PromptAnalysisService(ollamaClient, ollamaOptions, genOptions);
         var registry = SupportedPartsRegistry.FromJson(SupportedPartsJson, SupportedColorsJson);
@@ -200,7 +200,7 @@ public sealed class FullGenerationPipelineTests : IDisposable
             validator,
             templateRegistry,
             genOptions,
-            ollamaOptions.Model);
+            ollamaOptions.PlanningModel);
 
         var success = exitCode == 0;
 

@@ -99,6 +99,48 @@ public sealed class GenerationPipelineServiceTests : IDisposable
             $"Job must reach a terminal state, got {finished.Status}");
     }
 
+    [Fact]
+    public async Task RunAsync_WhenPromptExceedsMaxLength_FailsJobWithClearMessage()
+    {
+        // BF-MVP1-019 §19.5: oversized prompts must be rejected gracefully.
+        var oversizedPrompt = new string('x', 2001);
+        var job = new GenerationJob
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            CreatedAt = DateTimeOffset.UtcNow,
+            Prompt = oversizedPrompt
+        };
+        await _repo.CreateAsync(job);
+
+        await _sut.RunAsync(job.Id, CancellationToken.None);
+
+        var finished = await _repo.GetByIdAsync(job.Id);
+        Assert.NotNull(finished);
+        Assert.Equal(JobStatus.Failed, finished.Status);
+        Assert.NotNull(finished.ErrorMessage);
+        Assert.Contains("maximum length", finished.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenPromptIsAtMaxLength_DoesNotFailOnLengthCheck()
+    {
+        // Exactly at the limit (2000 chars) should not trigger the length guard.
+        var exactPrompt = new string('x', 2000);
+        var job = new GenerationJob
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            CreatedAt = DateTimeOffset.UtcNow,
+            Prompt = exactPrompt
+        };
+        await _repo.CreateAsync(job);
+
+        await _sut.RunAsync(job.Id, CancellationToken.None);
+
+        var finished = await _repo.GetByIdAsync(job.Id);
+        Assert.NotNull(finished);
+        Assert.NotEqual(JobStatus.Failed, finished.Status);
+    }
+
     public void Dispose()
     {
         try { Directory.Delete(_outputRoot, recursive: true); }

@@ -11,7 +11,6 @@ namespace BrickForge.Api.Endpoints;
 /// </summary>
 public static class GenerationJobEndpoints
 {
-    private const int MaxPromptLength = 2000;
     private const int MinPromptLength = 1;
 
     public static void MapGenerationJobEndpoints(this IEndpointRouteBuilder app)
@@ -45,17 +44,20 @@ public static class GenerationJobEndpoints
         CreateJobRequest request,
         IJobRepository jobs,
         IJobQueue queue,
+        IOptions<GenerationOptions> genOptions,
         CancellationToken ct)
     {
+        var maxLen = genOptions.Value.MaxPromptLength;
+
         if (string.IsNullOrWhiteSpace(request.Prompt)
             || request.Prompt.Trim().Length < MinPromptLength)
         {
             return Results.BadRequest(new { error = "Prompt must not be empty." });
         }
 
-        if (request.Prompt.Length > MaxPromptLength)
+        if (request.Prompt.Length > maxLen)
         {
-            return Results.BadRequest(new { error = $"Prompt must not exceed {MaxPromptLength} characters." });
+            return Results.BadRequest(new { error = $"Prompt must not exceed {maxLen} characters." });
         }
 
         var job = new GenerationJob
@@ -64,7 +66,8 @@ public static class GenerationJobEndpoints
             CreatedAt = DateTimeOffset.UtcNow,
             Prompt = request.Prompt.Trim(),
             Status = JobStatus.Queued,
-            TargetParts = request.TargetParts
+            TargetParts = request.TargetParts,
+            Difficulty = request.Difficulty
         };
 
         await jobs.CreateAsync(job, ct);
@@ -89,6 +92,7 @@ public static class GenerationJobEndpoints
             job.Id,
             job.Status.ToString(),
             job.TemplateName,
+            job.Difficulty,
             job.TargetParts,
             job.ActualParts,
             job.ValidationScore,

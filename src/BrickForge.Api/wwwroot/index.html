@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BrickForge – Modellgenerator</title>
+  <style>
+    :root {
+      --primary: #e3000b;
+      --bg: #f5f5f5;
+      --card: #ffffff;
+      --border: #ddd;
+      --text: #222;
+      --muted: #666;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 1.5rem; }
+    h1 { color: var(--primary); margin-bottom: 0.25rem; }
+    .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .disclaimer {
+      background: #fff8e1; border: 1px solid #ffe082;
+      padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; color: #5d4037;
+      margin-bottom: 1.5rem;
+    }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; }
+    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; }
+    textarea, select, input[type="number"], input[type="text"] {
+      width: 100%; border: 1px solid var(--border); border-radius: 5px;
+      padding: 0.5rem 0.75rem; font-size: 0.95rem; font-family: inherit;
+    }
+    textarea { height: 100px; resize: vertical; }
+    .row { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .row > .field { flex: 1; min-width: 180px; }
+    .field { margin-bottom: 0.75rem; }
+    .hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+    button#startBtn {
+      background: var(--primary); color: #fff; border: none; border-radius: 6px;
+      padding: 0.65rem 2rem; font-size: 1rem; cursor: pointer; margin-top: 0.5rem;
+    }
+    button#startBtn:disabled { background: #aaa; cursor: not-allowed; }
+    #statusBox { display: none; margin-top: 1rem; }
+    .status-label { font-weight: 600; }
+    .progress-bar-outer { background: #eee; border-radius: 4px; height: 10px; margin-top: 0.4rem; }
+    .progress-bar-inner { background: var(--primary); height: 100%; border-radius: 4px; transition: width 0.4s; }
+    #errorMsg { color: var(--primary); font-size: 0.9rem; margin-top: 0.5rem; display: none; }
+    #resultsBox { display: none; }
+    #fileList { list-style: none; padding: 0; margin-top: 0.5rem; }
+    #fileList li { margin-bottom: 0.35rem; }
+    #fileList a { color: #1565c0; }
+    .score-line { font-size: 0.9rem; color: var(--muted); margin-top: 0.4rem; }
+  </style>
+</head>
+<body>
+
+<h1>🧱 BrickForge</h1>
+<p class="subtitle">Lokaler KI-Modellgenerator für Klemmbaustein-kompatible Modelle (MOC)</p>
+
+<div class="disclaimer">
+  ⚠️ Alle generierten Modelle und Anleitungen sind automatisch erstellt und <strong>nicht</strong> von LEGO geprüft.
+  Es handelt sich um keine offiziellen LEGO-Produkte oder -Bauanleitungen.
+</div>
+
+<div class="card">
+  <div class="field">
+    <label for="prompt">Modellbeschreibung *</label>
+    <textarea id="prompt" maxlength="2000"
+      placeholder="Beschreibe das Modell, z. B.: Erstelle eine kleine schwarze Kaffeemaschine mit silbernem Frontpanel."></textarea>
+    <div class="hint"><span id="charCount">0</span> / 2000 Zeichen</div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label for="modelSize">Modellgrösse</label>
+      <select id="modelSize">
+        <option value="">– keine Auswahl –</option>
+        <option value="small_machine">Kleine Maschine</option>
+        <option value="small_building">Kleines Gebäude</option>
+        <option value="small_vehicle">Kleines Fahrzeug</option>
+        <option value="furniture">Möbel</option>
+        <option value="display_object">Dekoobjekt</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="difficulty">Schwierigkeitsgrad</label>
+      <select id="difficulty">
+        <option value="">– keine Auswahl –</option>
+        <option value="beginner">Einsteiger</option>
+        <option value="intermediate">Fortgeschritten</option>
+        <option value="advanced">Experte</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="targetParts">Teileanzahl (Ziel)</label>
+      <input type="number" id="targetParts" min="5" max="500" placeholder="z. B. 80" />
+      <div class="hint">Leer lassen für automatische Schätzung</div>
+    </div>
+  </div>
+
+  <button id="startBtn" type="button">Modell generieren</button>
+</div>
+
+<div class="card" id="statusBox">
+  <div class="status-label">Status: <span id="statusText">–</span></div>
+  <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar" style="width:0%"></div></div>
+  <div id="errorMsg"></div>
+</div>
+
+<div class="card" id="resultsBox">
+  <strong>Ergebnis</strong>
+  <div class="score-line" id="scoreLine"></div>
+  <ul id="fileList"></ul>
+</div>
+
+<script>
+  const API = '';
+  const statusSteps = {
+    Queued: 5, AnalyzingPrompt: 15, PlanningModel: 30,
+    GeneratingBrickGraph: 50, Validating: 65, Repairing: 70,
+    Exporting: 85, Completed: 100, CompletedWithWarnings: 100, Failed: 0
+  };
+
+  let pollTimer = null;
+  let currentJobId = null;
+
+  document.getElementById('prompt').addEventListener('input', function () {
+    document.getElementById('charCount').textContent = this.value.length;
+  });
+
+  document.getElementById('startBtn').addEventListener('click', startGeneration);
+
+  async function startGeneration() {
+    const prompt = document.getElementById('prompt').value.trim();
+    if (!prompt) { alert('Bitte eine Modellbeschreibung eingeben.'); return; }
+
+    const targetPartsRaw = document.getElementById('targetParts').value;
+    const difficulty = document.getElementById('difficulty').value || null;
+
+    const body = {
+      prompt,
+      difficulty: difficulty || null,
+      targetParts: targetPartsRaw ? parseInt(targetPartsRaw, 10) : null
+    };
+
+    document.getElementById('startBtn').disabled = true;
+    showStatus('Queued');
+    document.getElementById('resultsBox').style.display = 'none';
+    document.getElementById('errorMsg').style.display = 'none';
+
+    try {
+      const resp = await fetch(`${API}/api/generation-jobs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+        showError(err.error ?? 'Anfrage fehlgeschlagen.');
+        return;
+      }
+
+      const data = await resp.json();
+      currentJobId = data.jobId;
+      pollTimer = setInterval(() => pollJob(currentJobId), 1500);
+    } catch (e) {
+      showError('API nicht erreichbar. Ist der BrickForge-Server gestartet?');
+    }
+  }
+
+  async function pollJob(jobId) {
+    try {
+      const resp = await fetch(`${API}/api/generation-jobs/${jobId}`);
+      if (!resp.ok) return;
+      const job = await resp.json();
+
+      showStatus(job.status);
+
+      if (job.status === 'Completed' || job.status === 'CompletedWithWarnings') {
+        clearInterval(pollTimer);
+        await showResults(job);
+        document.getElementById('startBtn').disabled = false;
+      } else if (job.status === 'Failed') {
+        clearInterval(pollTimer);
+        showError(job.errorMessage ?? 'Generierung fehlgeschlagen.');
+        document.getElementById('startBtn').disabled = false;
+      }
+    } catch (_) { /* keep polling */ }
+  }
+
+  async function showResults(job) {
+    if (job.validationScore != null) {
+      document.getElementById('scoreLine').textContent =
+        `Validierungsscore: ${(job.validationScore * 100).toFixed(1)} %` +
+        (job.actualParts != null ? ` | ${job.actualParts} Teile` : '');
+    }
+
+    const filesResp = await fetch(`${API}/api/generation-jobs/${job.jobId}/files`);
+    const files = filesResp.ok ? await filesResp.json() : [];
+    const list = document.getElementById('fileList');
+    list.innerHTML = '';
+    for (const f of files) {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = `${API}/api/generation-jobs/${job.jobId}/download?fileId=${encodeURIComponent(f.fileId)}`;
+      a.textContent = f.fileName;
+      a.download = f.fileName;
+      li.appendChild(a);
+      list.appendChild(li);
+    }
+
+    document.getElementById('resultsBox').style.display = files.length ? 'block' : 'none';
+  }
+
+  function showStatus(status) {
+    document.getElementById('statusBox').style.display = 'block';
+    document.getElementById('statusText').textContent = statusLabel(status);
+    document.getElementById('progressBar').style.width = (statusSteps[status] ?? 0) + '%';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = '❌ ' + msg;
+    el.style.display = 'block';
+    document.getElementById('startBtn').disabled = false;
+  }
+
+  function statusLabel(s) {
+    const map = {
+      Queued: 'In Warteschlange', AnalyzingPrompt: 'Prompt wird analysiert',
+      PlanningModel: 'Modell wird geplant', GeneratingBrickGraph: 'BrickGraph wird erstellt',
+      Validating: 'Validierung läuft', Repairing: 'Reparatur läuft',
+      Exporting: 'Export läuft', Completed: '✅ Abgeschlossen',
+      CompletedWithWarnings: '⚠️ Abgeschlossen (mit Warnungen)', Failed: '❌ Fehlgeschlagen'
+    };
+    return map[s] ?? s;
+  }
+</script>
+</body>
+</html>

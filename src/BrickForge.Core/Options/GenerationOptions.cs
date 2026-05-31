@@ -13,4 +13,11 @@ public sealed class GenerationOptions
 
     /// <summary>Root directory for all generated output files.</summary>
     public string OutputRoot { get; init; } = "data/outputs";
+
+    /// <summary>
+    /// Maximum allowed character length of the user prompt.
+    /// Prompts exceeding this limit are rejected immediately without calling the AI.
+    /// BF-MVP1-019 §19.5: the system must handle oversized prompts gracefully.
+    /// </summary>
+    public int MaxPromptLength { get; init; } = 2000;
 }
