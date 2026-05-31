@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BrickForge.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8665a754cd9760f67d5ca207a2a40d65e3a61c83")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+80b7d0f15ab84e4e07d683fb0b38ba194f34739c")]
 [assembly: System.Reflection.AssemblyProductAttribute("BrickForge.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BrickForge.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

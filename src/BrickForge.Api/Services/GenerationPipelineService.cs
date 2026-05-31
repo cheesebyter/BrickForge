@@ -51,7 +51,7 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
 
     public async Task RunAsync(string jobId, CancellationToken cancellationToken = default)
     {
-        using var scope = _logger.BeginScope(new { JobId = jobId });
+        using var scope = _logger.BeginScope(new Dictionary<string, object?> { ["JobId"] = jobId, ["CorrelationId"] = jobId });
         var totalStopwatch = Stopwatch.StartNew();
 
         var job = await _jobs.GetByIdAsync(jobId, cancellationToken);

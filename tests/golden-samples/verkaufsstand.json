@@ -1,0 +1,23 @@
+{
+  "id": "verkaufsstand",
+  "prompt": "Erstelle einen kleinen Verkaufsstand mit gelbem Dach und weißem Tresen. Offen zugänglich von vorne.",
+  "expected": {
+    "model_category": "small_machine",
+    "min_parts": 10,
+    "max_parts": 300,
+    "required_files": ["model.mpd", "parts.csv", "instructions.md", "report.md"],
+    "min_validation_score": 0.70,
+    "disclaimer_required": true,
+    "disclaimer_text": "nicht um eine offizielle LEGO"
+  },
+  "mock_ai_response": {
+    "model_name": "Verkaufsstand",
+    "model_category": "small_machine",
+    "target_parts": 40,
+    "main_color": "white",
+    "accent_color": "yellow",
+    "features": ["counter", "roof"],
+    "feasible": true,
+    "warnings": []
+  }
+}

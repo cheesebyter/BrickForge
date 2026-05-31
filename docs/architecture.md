@@ -311,3 +311,55 @@ Diese Konfiguration erfüllt alle MVP-Grundsätze:
 - ✅ Offene Exportformate (LDraw, CSV, Markdown)
 - ✅ Kontrollierbare MVP-Komplexität
 - ✅ Erweiterbar für Bild-/3D-/Modifikationsfunktionen (MVP 2–5)
+
+---
+
+## Technische Kette – Nachweis (BF-MVP1-038)
+
+MVP 1 beweist, dass die zentrale technische Kette vollständig funktioniert.
+
+```text
+Textbeschreibung
+  -> strukturierter Modellplan   (PromptAnalysisResult)
+  -> BrickGraph                  (BrickGraph.Parts / BrickGraph.Steps)
+  -> Validierung                 (ValidationResult)
+  -> LDraw/MPD/LDR               (model.mpd)
+  -> Teileliste                  (parts.csv)
+  -> einfache Bauanleitung       (instructions.md)
+```
+
+Jeder Schritt ist durch `TechnicalChainVerificationTests` (in `BrickForge.Integration.Tests`)
+einzeln und im Verbund automatisiert verifiziert.
+
+| Schritt | Verantwortliche Klasse            | Testklasse                          |
+|---------|-----------------------------------|-------------------------------------|
+| 1       | `PromptAnalysisService`           | `TechnicalChainVerificationTests`   |
+| 2       | `SmallMachineGenerator`           | `TechnicalChainVerificationTests`   |
+| 3       | `BrickGraphValidator`             | `TechnicalChainVerificationTests`   |
+| 4       | `LDrawExporter`                   | `TechnicalChainVerificationTests`   |
+| 5       | `CsvPartsExporter`                | `TechnicalChainVerificationTests`   |
+| 6       | `MarkdownInstructionsExporter`    | `TechnicalChainVerificationTests`   |
+
+Damit entsteht die notwendige Basis für spätere, deutlich anspruchsvollere Funktionen
+wie reale Objektanalyse, 3D-Scan-Verarbeitung, bestehende Modellmodifikation und
+Premium-Bauanleitungen.
+
+---
+
+## Quellenhinweise (BF-MVP1-037)
+
+Die vollständige Liste der verwendeten externen Quellen und Ressourcen befindet sich in:
+
+**[`docs/references.md`](references.md)**
+
+Kurzübersicht:
+
+| Kategorie | Ressource | URL |
+|-----------|-----------|-----|
+| AI | Ollama Windows-Dokumentation | https://docs.ollama.com/windows |
+| AI | Ollama GPU-Dokumentation | https://docs.ollama.com/gpu |
+| Export | LDraw Legal Info | https://www.ldraw.org/legal-info |
+| Export | LDraw Parts Library | https://library.ldraw.org/ |
+| Optional | LPub3D Projektseite | https://trevorsandy.github.io/lpub3d/ |
+| Optional | BrickLink Studio Licence | https://studiohelp.bricklink.com/hc/en-us/articles/6606313426711-Studio-Software-License-Agreement |
+| Optional | BrickLink Studio Instruction Maker | https://studiohelp.bricklink.com/hc/en-us/articles/5626403887511-Introduction-to-instructions-maker |

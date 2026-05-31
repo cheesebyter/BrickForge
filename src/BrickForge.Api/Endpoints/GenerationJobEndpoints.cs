@@ -2,6 +2,7 @@ using BrickForge.Api.Dtos;
 using BrickForge.Core.Jobs;
 using BrickForge.Core.Options;
 using BrickForge.Core.Pipelines;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
 namespace BrickForge.Api.Endpoints;
@@ -45,19 +46,29 @@ public static class GenerationJobEndpoints
         IJobRepository jobs,
         IJobQueue queue,
         IOptions<GenerationOptions> genOptions,
+        HttpContext ctx,
         CancellationToken ct)
     {
         var maxLen = genOptions.Value.MaxPromptLength;
+        var correlationId = ctx.TraceIdentifier;
 
         if (string.IsNullOrWhiteSpace(request.Prompt)
             || request.Prompt.Trim().Length < MinPromptLength)
         {
-            return Results.BadRequest(new { error = "Prompt must not be empty." });
+            return Results.BadRequest(new ApiErrorResponse(
+                "VALIDATION_ERROR",
+                "Prompt must not be empty.",
+                null,
+                correlationId));
         }
 
         if (request.Prompt.Length > maxLen)
         {
-            return Results.BadRequest(new { error = $"Prompt must not exceed {maxLen} characters." });
+            return Results.BadRequest(new ApiErrorResponse(
+                "VALIDATION_ERROR",
+                $"Prompt must not exceed {maxLen} characters.",
+                null,
+                correlationId));
         }
 
         var job = new GenerationJob
@@ -82,11 +93,16 @@ public static class GenerationJobEndpoints
     private static async Task<IResult> GetJobAsync(
         string id,
         IJobRepository jobs,
+        HttpContext ctx,
         CancellationToken ct)
     {
         var job = await jobs.GetByIdAsync(id, ct);
         if (job is null)
-            return Results.NotFound(new { error = $"Job '{id}' not found." });
+            return Results.NotFound(new ApiErrorResponse(
+                "NOT_FOUND",
+                $"Job '{id}' not found.",
+                null,
+                ctx.TraceIdentifier));
 
         var response = new JobStatusResponse(
             job.Id,
@@ -107,11 +123,16 @@ public static class GenerationJobEndpoints
     private static async Task<IResult> GetFilesAsync(
         string id,
         IJobRepository jobs,
+        HttpContext ctx,
         CancellationToken ct)
     {
         var job = await jobs.GetByIdAsync(id, ct);
         if (job is null)
-            return Results.NotFound(new { error = $"Job '{id}' not found." });
+            return Results.NotFound(new ApiErrorResponse(
+                "NOT_FOUND",
+                $"Job '{id}' not found.",
+                null,
+                ctx.TraceIdentifier));
 
         var files = job.Files.Select(f => new JobFileDto(
             f.Id,
@@ -126,20 +147,33 @@ public static class GenerationJobEndpoints
     private static async Task<IResult> GetValidationAsync(
         string id,
         IJobRepository jobs,
+        HttpContext ctx,
         CancellationToken ct)
     {
         var job = await jobs.GetByIdAsync(id, ct);
         if (job is null)
-            return Results.NotFound(new { error = $"Job '{id}' not found." });
+            return Results.NotFound(new ApiErrorResponse(
+                "NOT_FOUND",
+                $"Job '{id}' not found.",
+                null,
+                ctx.TraceIdentifier));
 
         var validationFile = job.Files.FirstOrDefault(
             f => string.Equals(f.FileType, "validation.json", StringComparison.OrdinalIgnoreCase));
 
         if (validationFile is null)
-            return Results.NotFound(new { error = "Validation result not yet available." });
+            return Results.NotFound(new ApiErrorResponse(
+                "NOT_FOUND",
+                "Validation result not yet available.",
+                null,
+                ctx.TraceIdentifier));
 
         if (!File.Exists(validationFile.FilePath))
-            return Results.NotFound(new { error = "Validation file not found on disk." });
+            return Results.NotFound(new ApiErrorResponse(
+                "NOT_FOUND",
+                "Validation file not found on disk.",
+                null,
+                ctx.TraceIdentifier));
 
         var rawJson = await File.ReadAllTextAsync(validationFile.FilePath, ct);
 
@@ -170,18 +204,27 @@ public static class GenerationJobEndpoints
         string fileId,
         IJobRepository jobs,
         IOptions<GenerationOptions> genOptions,
+        HttpContext ctx,
         CancellationToken ct)
     {
         var job = await jobs.GetByIdAsync(id, ct);
         if (job is null)
-            return Results.NotFound(new { error = $"Job '{id}' not found." });
+            return Results.NotFound(new ApiErrorResponse(
+                "NOT_FOUND",
+                $"Job '{id}' not found.",
+                null,
+                ctx.TraceIdentifier));
 
         // Resolve file from job metadata – never from user-supplied path.
         var file = job.Files.FirstOrDefault(
             f => string.Equals(f.Id, fileId, StringComparison.Ordinal));
 
         if (file is null)
-            return Results.NotFound(new { error = $"File '{fileId}' not found for job '{id}'." });
+            return Results.NotFound(new ApiErrorResponse(
+                "NOT_FOUND",
+                $"File '{fileId}' not found for job '{id}'.",
+                null,
+                ctx.TraceIdentifier));
 
         // Path security: verify the resolved path is within the configured output root.
         var outputRoot = Path.GetFullPath(genOptions.Value.OutputRoot);
@@ -190,13 +233,17 @@ public static class GenerationJobEndpoints
         if (!fullPath.StartsWith(outputRoot + Path.DirectorySeparatorChar, StringComparison.Ordinal)
             && !fullPath.StartsWith(outputRoot + Path.AltDirectorySeparatorChar, StringComparison.Ordinal))
         {
-            return Results.Problem(
-                statusCode: StatusCodes.Status403Forbidden,
-                detail: "Access denied.");
+            return Results.Json(
+                new ApiErrorResponse("ACCESS_DENIED", "Access denied.", null, ctx.TraceIdentifier),
+                statusCode: StatusCodes.Status403Forbidden);
         }
 
         if (!File.Exists(fullPath))
-            return Results.NotFound(new { error = "File not found on disk." });
+            return Results.NotFound(new ApiErrorResponse(
+                "NOT_FOUND",
+                "File not found on disk.",
+                null,
+                ctx.TraceIdentifier));
 
         var contentType = GetContentType(file.FileType);
         var fileName = Path.GetFileName(fullPath);

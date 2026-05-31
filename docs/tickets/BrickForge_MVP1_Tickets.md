@@ -1662,3 +1662,585 @@ Textbeschreibung
 ```
 
 Damit entsteht die notwendige Basis für spätere, deutlich anspruchsvollere Funktionen wie reale Objektanalyse, 3D-Scan-Verarbeitung, bestehende Modellmodifikation und Premium-Bauanleitungen.
+
+
+
+
+## BF-MVP1-039 – API-Fehlerantworten standardisieren
+
+**Priorität:** P1  
+**Bereich:** API  
+**Ziel:** Einheitliche, professionelle Fehlerantworten.
+
+### Akzeptanzkriterien
+
+- Fehlerantwort enthält Code, Message, Details und CorrelationId.
+- Validierungsfehler liefern HTTP 400.
+- Nicht gefundene Jobs liefern HTTP 404.
+- interne Fehler liefern HTTP 500 ohne Stacktrace an User.
+- Stacktrace wird nur im Entwicklerlog gespeichert.
+
+---
+
+# 13. UI
+
+## BF-MVP1-040 – Lokale MVP-UI erstellen
+
+**Priorität:** P1  
+**Bereich:** UI  
+**Ziel:** Benutzer kann Textprompt eingeben und Ergebnisdateien herunterladen.
+
+### Anforderungen
+
+- Texteingabe für Modellbeschreibung
+- Zielteileanzahl
+- Schwierigkeit
+- bevorzugte Farben
+- Checkbox „nur lokale AI verwenden“
+- Button „Generieren“
+- Statusanzeige
+- Ergebnis-/Downloadbereich
+
+### Akzeptanzkriterien
+
+- Job kann aus UI gestartet werden.
+- Status wird angezeigt.
+- Abschluss zeigt Dateien.
+- Fehler werden verständlich dargestellt.
+- UI erzwingt kein Cloudkonto.
+
+---
+
+## BF-MVP1-041 – Fortschrittsanzeige für Workflow-Zustände
+
+**Priorität:** P2  
+**Bereich:** UI  
+**Ziel:** Workflow-Fortschritt transparent anzeigen.
+
+### Zustände
+
+- Promptanalyse
+- Templateauswahl
+- Brickplanung
+- BrickGraph-Erzeugung
+- Validierung
+- Reparatur
+- Export
+- Abgeschlossen
+
+### Akzeptanzkriterien
+
+- Aktueller Status wird angezeigt.
+- Fehlerstatus ist sichtbar.
+- Completed-with-warnings wird unterschieden.
+- Kein technischer Stacktrace in der UI.
+
+---
+
+## BF-MVP1-042 – Ergebnisansicht mit Validierungszusammenfassung
+
+**Priorität:** P2  
+**Bereich:** UI  
+**Ziel:** Benutzer erhält verständliche Qualitätsinformationen zum Modell.
+
+### Akzeptanzkriterien
+
+- Teileanzahl wird angezeigt.
+- Farben werden angezeigt.
+- Validierungsscore wird angezeigt.
+- High/Medium/Low-Warnungen werden zusammengefasst.
+- Links zu `report.md`, `instructions.md`, `model.mpd` und `parts.csv` sind vorhanden.
+
+---
+
+# 14. Monitoring, Logging und Diagnose
+
+## BF-MVP1-043 – Strukturiertes Logging implementieren
+
+**Priorität:** P0  
+**Bereich:** Diagnose  
+**Ziel:** Nachvollziehbare Logs für Jobs und Agenten.
+
+### Anforderungen
+
+- JobId in jedem relevanten Logeintrag
+- AgentName in Agentenlogs
+- Dauer pro Schritt
+- Fehler mit technischer Ursache
+- keine API-Keys oder sensiblen Daten
+
+### Akzeptanzkriterien
+
+- Logs enthalten CorrelationId.
+- Agentenfehler sind nachvollziehbar.
+- Keine sensiblen Konfigurationswerte werden geloggt.
+- Logging ist konfigurierbar.
+
+---
+
+## BF-MVP1-044 – Agentenmetriken erfassen
+
+**Priorität:** P2  
+**Bereich:** Diagnose  
+**Ziel:** Laufzeiten, Retries und LLM-Nutzung pro Agent erfassen.
+
+### Metriken
+
+- start_time
+- end_time
+- duration_ms
+- llm_calls
+- retries
+- success
+- confidence
+- final_score
+
+### Akzeptanzkriterien
+
+- Metriken werden pro Agent gespeichert.
+- Gesamtmetriken werden pro Job gespeichert.
+- Metriken erscheinen im Bericht.
+- Tests prüfen Metrikaufzeichnung.
+
+---
+
+## BF-MVP1-045 – Health Checks implementieren
+
+**Priorität:** P1  
+**Bereich:** Diagnose  
+**Ziel:** Betriebszustand von API, Datenbank, Ollama und Agenten prüfen.
+
+### Endpunkte
+
+```http
+GET /health
+GET /health/agents
+GET /health/ollama
+GET /health/database
+```
+
+### Akzeptanzkriterien
+
+- Health Check erkennt fehlendes Ollama.
+- Health Check erkennt Datenbankprobleme.
+- Agentenstatus wird ausgegeben.
+- UI/API kann verständlich auf Fehler reagieren.
+
+---
+
+# 15. Sicherheit
+
+## BF-MVP1-046 – Prompt- und Input-Sicherheit implementieren
+
+**Priorität:** P0  
+**Bereich:** Sicherheit  
+**Ziel:** Prompts dürfen keine unsicheren Aktionen auslösen.
+
+### Anforderungen
+
+- maximale Promptlänge
+- keine Shell-Befehle aus Prompt ausführen
+- keine Dateipfade aus Prompt übernehmen
+- nur strukturierte JSON-Ausgaben weiterverarbeiten
+- keine AI-generierte Programmausführung
+
+### Akzeptanzkriterien
+
+- Promptlänge wird validiert.
+- Potenziell gefährliche Eingaben werden nicht ausgeführt.
+- AI-Ausgaben werden nur als Daten behandelt.
+- Tests mit adversarial Prompts existieren.
+
+---
+
+## BF-MVP1-047 – Download- und Dateisicherheit implementieren
+
+**Priorität:** P0  
+**Bereich:** Sicherheit  
+**Ziel:** Nur generierte Dateien aus erlaubten Verzeichnissen ausgeben.
+
+### Akzeptanzkriterien
+
+- Downloadpfade werden normalisiert.
+- `../`-Traversal wird verhindert.
+- Nur Dateien des jeweiligen Jobs sind abrufbar.
+- Nicht vorhandene Dateien liefern 404.
+- Tests für Pfadmanipulation existieren.
+
+---
+
+# 16. Tests und Qualitätssicherung
+
+## BF-MVP1-048 – Golden Sample Prompts definieren
+
+**Priorität:** P0  
+**Bereich:** Tests  
+**Ziel:** Stabile Beispielprompts für wiederholbare MVP-Tests.
+
+### Pflichtprompts
+
+1. Kaffeemaschine
+2. kleines Gartenhaus
+3. Werkbank
+4. kleiner Sportwagen
+5. Verkaufsstand
+
+### Akzeptanzkriterien
+
+- Jeder Prompt liegt als Datei vor.
+- Erwartete Eigenschaften sind definiert.
+- Tests können Prompts automatisiert ausführen.
+- Ergebnisse werden gegen Akzeptanzkriterien geprüft.
+
+---
+
+## BF-MVP1-049 – End-to-End-Test für vollständigen Workflow
+
+**Priorität:** P0  
+**Bereich:** Tests  
+**Ziel:** Vollständige Generierung automatisiert prüfen.
+
+### Ablauf
+
+```text
+Prompt
+  -> PromptAnalysis
+  -> TemplateSelection
+  -> BrickPlan
+  -> BrickGraph
+  -> Validation
+  -> Repair
+  -> Export
+```
+
+### Akzeptanzkriterien
+
+- Workflow läuft für mindestens einen Golden Sample Prompt durch.
+- Job endet mit `completed` oder `completed_with_warnings`.
+- `model.mpd`, `parts.csv`, `instructions.md`, `report.md` werden erzeugt.
+- Validierungsscore >= 0.70 oder Warnstatus wird sauber gesetzt.
+
+---
+
+## BF-MVP1-050 – Tests für Ollama-Ausfall
+
+**Priorität:** P1  
+**Bereich:** Tests  
+**Ziel:** Systemverhalten bei nicht erreichbarem Ollama prüfen.
+
+### Akzeptanzkriterien
+
+- Health Check erkennt Ausfall.
+- Job bricht verständlich ab.
+- Kein unhandled exception.
+- UI/API meldet „Ollama nicht erreichbar“.
+- Fehler wird im Bericht protokolliert.
+
+---
+
+## BF-MVP1-051 – Tests für ungültige LLM-Ausgaben
+
+**Priorität:** P1  
+**Bereich:** Tests  
+**Ziel:** Robustheit gegen ungültiges JSON sicherstellen.
+
+### Akzeptanzkriterien
+
+- Ungültiges JSON löst Retry aus.
+- Nach finalem Fehler wird Job als failed markiert.
+- Fehler wird nachvollziehbar gespeichert.
+- Kein ungültiges JSON wird in Kernlogik weiterverarbeitet.
+
+---
+
+# 17. Dokumentation
+
+## BF-MVP1-052 – Entwicklerdokumentation erstellen
+
+**Priorität:** P1  
+**Bereich:** Dokumentation  
+**Ziel:** Lokale Einrichtung und Architektur dokumentieren.
+
+### Inhalte
+
+- Setup Windows
+- Ollama Setup
+- PostgreSQL Docker Setup
+- Projektstruktur
+- Konfiguration
+- Agentenübersicht
+- lokaler Start
+- Troubleshooting
+
+### Akzeptanzkriterien
+
+- `docs/setup.md` ist vorhanden.
+- `docs/architecture.md` ist vorhanden.
+- `docs/agents.md` ist vorhanden.
+- Ein Entwickler kann das System anhand der Dokumentation lokal starten.
+
+---
+
+## BF-MVP1-053 – Lizenz- und Rechtshinweise dokumentieren
+
+**Priorität:** P1  
+**Bereich:** Dokumentation  
+**Ziel:** Lizenzabhängigkeiten und Markenabgrenzung transparent machen.
+
+### Inhalte
+
+- Keine offizielle LEGO-Anleitung
+- BrickForge als neutrales Brick-/MOC-System
+- LDraw Attribution
+- lokale Nutzung der Parts Library
+- optionale Tools wie LPub3D und BrickLink Studio getrennt ausweisen
+
+### Akzeptanzkriterien
+
+- `docs/legal-notes.md` ist vorhanden.
+- ReportExporter verweist auf rechtlichen Hinweis.
+- UI/README vermeiden irreführende LEGO-Markenverwendung.
+- Lizenzhinweise sind nicht nur im Code versteckt.
+
+---
+
+# 18. MVP-Abschluss
+
+## BF-MVP1-054 – MVP-Demo-Szenario vorbereiten
+
+**Priorität:** P0  
+**Bereich:** Abschluss  
+**Ziel:** Reproduzierbare Demo für Stakeholder.
+
+### Demo-Prompt
+
+```text
+Erstelle eine kleine moderne Siebträgermaschine als Brick-Modell.
+Sie soll schwarz und silber sein, ca. 180 Teile haben, mit Siebträger, Tasse, Dampflanze und Wassertank.
+Das Modell soll stabil und einfach baubar sein.
+```
+
+### Akzeptanzkriterien
+
+- Demo läuft lokal ohne externe AI-API.
+- Output-Dateien werden erzeugt.
+- Validierungsscore ist nachvollziehbar.
+- Bericht erklärt Einschränkungen.
+- Demo kann in unter 10 Minuten vollständig gezeigt werden.
+
+---
+
+## BF-MVP1-055 – MVP-Abnahmekriterien prüfen
+
+**Priorität:** P0  
+**Bereich:** Abschluss  
+**Ziel:** Formale Abnahme gegen Pflichtenheft.
+
+### Prüfpunkte
+
+- Textbeschreibung kann eingegeben werden.
+- Strukturierter Modellplan wird erzeugt.
+- Template wird gewählt.
+- BrickGraph wird erzeugt.
+- Validierung läuft.
+- Reparatur läuft bei einfachen Fehlern.
+- LDraw/MPD/LDR wird exportiert.
+- CSV-Teileliste wird erzeugt.
+- Markdown-Anleitung wird erzeugt.
+- Generierungsbericht wird erzeugt.
+- Standardbetrieb läuft ohne externe AI-API.
+
+### Akzeptanzkriterien
+
+- Alle Prüfpunkte sind dokumentiert.
+- Offene Abweichungen sind im Abnahmeprotokoll aufgeführt.
+- Kritische P0-Tickets sind abgeschlossen.
+- MVP kann als technische Basis für MVP 2 genutzt werden.
+
+---
+
+---
+
+# 2. Empfohlene Agentenlauf-Gruppierung ab BF-MVP1-039
+
+## Lauf A – API-Fehlerantworten und UI-Grundlage
+
+```text
+BF-MVP1-039
+BF-MVP1-040
+```
+
+**Ziel:**
+
+```text
+Standardisierte API-Fehlerantworten
+lokale MVP-UI
+Jobstart aus der UI
+erste Ergebnisanzeige
+```
+
+---
+
+## Lauf B – UI-Fortschritt und Ergebnisqualität
+
+```text
+BF-MVP1-041
+BF-MVP1-042
+```
+
+**Ziel:**
+
+```text
+Workflow-Fortschrittsanzeige
+Ergebnisansicht
+Validierungsscore
+Warnungen
+Downloadlinks
+```
+
+---
+
+## Lauf C – Logging, Metriken und Health
+
+```text
+BF-MVP1-043
+BF-MVP1-044
+BF-MVP1-045
+```
+
+**Ziel:**
+
+```text
+strukturiertes Logging
+Agentenmetriken
+Health Checks für API, Ollama, Datenbank und Agenten
+```
+
+---
+
+## Lauf D – Sicherheit
+
+```text
+BF-MVP1-046
+BF-MVP1-047
+```
+
+**Ziel:**
+
+```text
+Prompt- und Input-Sicherheit
+Download- und Dateisicherheit
+Pfadmanipulation verhindern
+AI-Ausgaben weiterhin als untrusted data behandeln
+```
+
+---
+
+## Lauf E – Tests und Qualitätssicherung
+
+```text
+BF-MVP1-048
+BF-MVP1-049
+BF-MVP1-050
+BF-MVP1-051
+```
+
+**Ziel:**
+
+```text
+Golden Sample Prompts
+End-to-End-Test
+Ollama-Ausfalltest
+Tests für ungültige LLM-Ausgaben
+```
+
+---
+
+## Lauf F – Dokumentation
+
+```text
+BF-MVP1-052
+BF-MVP1-053
+```
+
+**Ziel:**
+
+```text
+Entwicklerdokumentation
+Lizenz- und Rechtshinweise
+lokales Setup
+rechtliche Abgrenzung
+```
+
+---
+
+## Lauf G – MVP1-Abschluss
+
+```text
+BF-MVP1-054
+BF-MVP1-055
+```
+
+**Ziel:**
+
+```text
+Demo-Szenario
+formale MVP1-Abnahme
+Prüfung gegen Pflichtenheft
+Übergang zu MVP2 vorbereiten
+```
+
+---
+
+# 3. Minimal sinnvoller Block ab BF-MVP1-039
+
+Wenn der technische Kern bis `BF-MVP1-038` bereits funktioniert, ist dies der kleinste sinnvolle Folgeblock:
+
+```text
+BF-MVP1-039
+BF-MVP1-043
+BF-MVP1-045
+BF-MVP1-046
+BF-MVP1-047
+BF-MVP1-048
+BF-MVP1-049
+BF-MVP1-050
+BF-MVP1-051
+```
+
+Damit werden abgedeckt:
+
+```text
+saubere API-Fehler
+Logging
+Health Checks
+Sicherheit
+Golden Samples
+E2E-Test
+Ollama-Ausfall
+ungültige LLM-Ausgaben
+```
+
+Die UI- und Dokumentationstickets können danach folgen.
+
+---
+
+# 4. Empfohlene Reihenfolge für wenig Interaktion
+
+```text
+1. BF-MVP1-039
+2. BF-MVP1-043, BF-MVP1-045
+3. BF-MVP1-046, BF-MVP1-047
+4. BF-MVP1-048, BF-MVP1-049, BF-MVP1-050, BF-MVP1-051
+5. BF-MVP1-040, BF-MVP1-041, BF-MVP1-042
+6. BF-MVP1-052, BF-MVP1-053
+7. BF-MVP1-054, BF-MVP1-055
+```
+
+Begründung:
+
+```text
+Erst API-/Diagnose-/Sicherheitsbasis stabilisieren,
+dann Tests absichern,
+danach UI und Dokumentation finalisieren.
+```

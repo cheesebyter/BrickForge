@@ -1,5 +1,17 @@
 namespace BrickForge.Api.Dtos;
 
+/// <summary>
+/// Standard error response envelope for all API error conditions (BF-MVP1-039).
+/// Contains Code, Message, optional Details, and CorrelationId (= HTTP TraceIdentifier).
+/// Stacktraces are never included; they are written only to the server log.
+/// </summary>
+public sealed record ApiErrorResponse(
+    string Code,
+    string Message,
+    string? Details,
+    string CorrelationId
+);
+
 /// <summary>Request body for creating a new generation job.</summary>
 public sealed record CreateJobRequest(
     string Prompt,

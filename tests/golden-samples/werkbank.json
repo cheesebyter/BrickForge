@@ -1,0 +1,23 @@
+{
+  "id": "werkbank",
+  "prompt": "Erstelle eine einfache Werkbank mit hellgrauer Arbeitsfläche und blauen Schubladen. Stabil und funktional.",
+  "expected": {
+    "model_category": "small_machine",
+    "min_parts": 10,
+    "max_parts": 300,
+    "required_files": ["model.mpd", "parts.csv", "instructions.md", "report.md"],
+    "min_validation_score": 0.70,
+    "disclaimer_required": true,
+    "disclaimer_text": "nicht um eine offizielle LEGO"
+  },
+  "mock_ai_response": {
+    "model_name": "Werkbank",
+    "model_category": "small_machine",
+    "target_parts": 45,
+    "main_color": "light_bluish_gray",
+    "accent_color": "blue",
+    "features": ["drawers", "work_surface"],
+    "feasible": true,
+    "warnings": []
+  }
+}

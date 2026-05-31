@@ -1,5 +1,6 @@
 using BrickForge.Ai;
 using BrickForge.Ai.Analysis;
+using BrickForge.Api.Dtos;
 using BrickForge.Api.Endpoints;
 using BrickForge.Api.Health;
 using BrickForge.Api.Persistence;
@@ -124,9 +125,39 @@ builder.Services.AddCors(options =>
 
 // ── Health checks ─────────────────────────────────────────────────────────────
 builder.Services.AddHealthChecks()
-    .AddCheck<OllamaHealthCheck>("ollama");
+    .AddCheck<OllamaHealthCheck>("ollama", tags: ["ollama"])
+    .AddCheck<DatabaseHealthCheck>("database", tags: ["database"])
+    .AddCheck<AgentsHealthCheck>("agents", tags: ["agents"]);
 
 var app = builder.Build();
+
+// ── BF-MVP1-039: Global exception handler (log stacktrace, never expose it) ──
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        var exFeature = context.Features
+            .Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        if (exFeature?.Error is not null)
+        {
+            var logger = context.RequestServices
+                .GetRequiredService<ILogger<Program>>();
+            logger.LogError(exFeature.Error,
+                "Unhandled exception on {Method} {Path}",
+                context.Request.Method, context.Request.Path);
+        }
+
+        var error = new ApiErrorResponse(
+            "INTERNAL_ERROR",
+            "An unexpected error occurred.",
+            null,
+            context.TraceIdentifier);
+        await context.Response.WriteAsJsonAsync(error);
+    });
+});
 
 // ── BF-MVP1-023: Serve static SPA UI from wwwroot/ ────────────────────────────
 app.UseDefaultFiles();
@@ -157,7 +188,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors();
 
+// BF-MVP1-045: aggregate and per-component health check endpoints.
 app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ollama",    new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    { Predicate = c => c.Tags.Contains("ollama") });
+app.MapHealthChecks("/health/database",  new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    { Predicate = c => c.Tags.Contains("database") });
+app.MapHealthChecks("/health/agents",    new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    { Predicate = c => c.Tags.Contains("agents") });
 
 app.MapGenerationJobEndpoints();
 

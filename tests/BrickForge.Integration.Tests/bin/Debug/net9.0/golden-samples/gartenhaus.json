@@ -1,0 +1,23 @@
+{
+  "id": "gartenhaus",
+  "prompt": "Baue ein kleines Gartenhaus mit rotem Dach und weißen Wänden. Es soll eine Tür haben und einfach erkennbar sein.",
+  "expected": {
+    "model_category": "small_machine",
+    "min_parts": 10,
+    "max_parts": 300,
+    "required_files": ["model.mpd", "parts.csv", "instructions.md", "report.md"],
+    "min_validation_score": 0.70,
+    "disclaimer_required": true,
+    "disclaimer_text": "nicht um eine offizielle LEGO"
+  },
+  "mock_ai_response": {
+    "model_name": "Kleines Gartenhaus",
+    "model_category": "small_machine",
+    "target_parts": 60,
+    "main_color": "white",
+    "accent_color": "red",
+    "features": ["door", "roof"],
+    "feasible": true,
+    "warnings": []
+  }
+}

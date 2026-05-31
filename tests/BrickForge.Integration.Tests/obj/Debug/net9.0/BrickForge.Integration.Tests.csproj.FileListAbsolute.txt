@@ -108,3 +108,8 @@ E:\Project\BrickForge\tests\BrickForge.Integration.Tests\obj\Debug\net9.0\BrickF
 E:\Project\BrickForge\tests\BrickForge.Integration.Tests\obj\Debug\net9.0\ref\BrickForge.Integration.Tests.dll
 E:\Project\BrickForge\tests\BrickForge.Integration.Tests\bin\Debug\net9.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
 E:\Project\BrickForge\tests\BrickForge.Integration.Tests\bin\Debug\net9.0\Microsoft.Extensions.Logging.Abstractions.dll
+E:\Project\BrickForge\tests\BrickForge.Integration.Tests\bin\Debug\net9.0\golden-samples\gartenhaus.json
+E:\Project\BrickForge\tests\BrickForge.Integration.Tests\bin\Debug\net9.0\golden-samples\kaffeemaschine.json
+E:\Project\BrickForge\tests\BrickForge.Integration.Tests\bin\Debug\net9.0\golden-samples\sportwagen.json
+E:\Project\BrickForge\tests\BrickForge.Integration.Tests\bin\Debug\net9.0\golden-samples\verkaufsstand.json
+E:\Project\BrickForge\tests\BrickForge.Integration.Tests\bin\Debug\net9.0\golden-samples\werkbank.json
