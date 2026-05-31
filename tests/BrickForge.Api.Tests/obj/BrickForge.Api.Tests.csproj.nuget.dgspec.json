@@ -134,6 +134,10 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "Microsoft.Data.Sqlite": {
+              "target": "Package",
+              "version": "[9.0.4, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[7.3.1, )"
@@ -400,8 +404,14 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
+              "E:\\Project\\BrickForge\\src\\BrickForge.Ai\\BrickForge.Ai.csproj": {
+                "projectPath": "E:\\Project\\BrickForge\\src\\BrickForge.Ai\\BrickForge.Ai.csproj"
+              },
               "E:\\Project\\BrickForge\\src\\BrickForge.Api\\BrickForge.Api.csproj": {
                 "projectPath": "E:\\Project\\BrickForge\\src\\BrickForge.Api\\BrickForge.Api.csproj"
+              },
+              "E:\\Project\\BrickForge\\src\\BrickForge.BrickGraph\\BrickForge.BrickGraph.csproj": {
+                "projectPath": "E:\\Project\\BrickForge\\src\\BrickForge.BrickGraph\\BrickForge.BrickGraph.csproj"
               },
               "E:\\Project\\BrickForge\\src\\BrickForge.Core\\BrickForge.Core.csproj": {
                 "projectPath": "E:\\Project\\BrickForge\\src\\BrickForge.Core\\BrickForge.Core.csproj"
@@ -428,6 +438,10 @@
             "Microsoft.AspNetCore.Mvc.Testing": {
               "target": "Package",
               "version": "[9.0.0, )"
+            },
+            "Microsoft.Data.Sqlite": {
+              "target": "Package",
+              "version": "[9.0.4, )"
             },
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",

@@ -1,6 +1,7 @@
 using BrickForge.Api.Dtos;
 using BrickForge.Core.Jobs;
 using BrickForge.Core.Options;
+using BrickForge.Core.Pipelines;
 using Microsoft.Extensions.Options;
 
 namespace BrickForge.Api.Endpoints;
@@ -43,6 +44,7 @@ public static class GenerationJobEndpoints
     private static async Task<IResult> CreateJobAsync(
         CreateJobRequest request,
         IJobRepository jobs,
+        IJobQueue queue,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.Prompt)
@@ -66,6 +68,7 @@ public static class GenerationJobEndpoints
         };
 
         await jobs.CreateAsync(job, ct);
+        queue.Enqueue(job.Id);
 
         var response = new CreateJobResponse(job.Id, job.Status.ToString());
         return Results.Created($"/api/generation-jobs/{job.Id}", response);

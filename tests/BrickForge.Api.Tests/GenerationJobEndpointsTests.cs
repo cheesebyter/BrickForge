@@ -12,11 +12,11 @@ namespace BrickForge.Api.Tests;
 /// Integration tests for all generation-job API endpoints.
 /// These tests use an in-memory server and do not require Ollama.
 /// </summary>
-public sealed class GenerationJobEndpointsTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class GenerationJobEndpointsTests : IClassFixture<TestApiFactory>
 {
     private readonly HttpClient _client;
 
-    public GenerationJobEndpointsTests(WebApplicationFactory<Program> factory)
+    public GenerationJobEndpointsTests(TestApiFactory factory)
     {
         _client = factory.CreateClient();
     }
