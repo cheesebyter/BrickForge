@@ -136,6 +136,118 @@ public sealed class FullGenerationPipelineTests : IDisposable
         Assert.True(File.Exists(Path.Combine(outputDir, "model.mpd")));
     }
 
+    // ── Golden sample: Gartenhaus (BF-MVP1-028 §28.3) ────────────────────────
+
+    [Fact]
+    public async Task FullPipeline_GartenhausGoldenSample_ProducesAllSixOutputFiles()
+    {
+        var (outputDir, success) = await RunPipelineAsync(GartenhausPrompt, GartenhausAnalysisJson);
+
+        Assert.True(success, "Pipeline must succeed for the Gartenhaus golden sample");
+        Assert.True(File.Exists(Path.Combine(outputDir, "brickgraph.json")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "validation.json")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "model.mpd")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "parts.csv")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "instructions.md")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "report.md")));
+    }
+
+    [Fact]
+    public async Task FullPipeline_GartenhausGoldenSample_ValidationPasses()
+    {
+        var (outputDir, _) = await RunPipelineAsync(GartenhausPrompt, GartenhausAnalysisJson);
+
+        var validationJson = await File.ReadAllTextAsync(Path.Combine(outputDir, "validation.json"));
+        var validation = ValidationResult.FromJson(validationJson);
+
+        Assert.NotNull(validation);
+        Assert.True(validation.Valid, $"Gartenhaus validation must pass. Issues: {string.Join("; ", validation.Issues.Select(i => i.Code))}");
+    }
+
+    // ── Golden sample: Werkbank (BF-MVP1-028 §28.3) ───────────────────────────
+
+    [Fact]
+    public async Task FullPipeline_WerkbankGoldenSample_ProducesAllSixOutputFiles()
+    {
+        var (outputDir, success) = await RunPipelineAsync(WerkbankPrompt, WerkbankAnalysisJson);
+
+        Assert.True(success, "Pipeline must succeed for the Werkbank golden sample");
+        Assert.True(File.Exists(Path.Combine(outputDir, "brickgraph.json")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "validation.json")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "model.mpd")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "parts.csv")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "instructions.md")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "report.md")));
+    }
+
+    [Fact]
+    public async Task FullPipeline_WerkbankGoldenSample_ValidationPasses()
+    {
+        var (outputDir, _) = await RunPipelineAsync(WerkbankPrompt, WerkbankAnalysisJson);
+
+        var validationJson = await File.ReadAllTextAsync(Path.Combine(outputDir, "validation.json"));
+        var validation = ValidationResult.FromJson(validationJson);
+
+        Assert.NotNull(validation);
+        Assert.True(validation.Valid, $"Werkbank validation must pass. Issues: {string.Join("; ", validation.Issues.Select(i => i.Code))}");
+    }
+
+    // ── Golden sample: Sportwagen (BF-MVP1-028 §28.3) ────────────────────────
+
+    [Fact]
+    public async Task FullPipeline_SportwagenGoldenSample_ProducesAllSixOutputFiles()
+    {
+        var (outputDir, success) = await RunPipelineAsync(SportwagenPrompt, SportwagenAnalysisJson);
+
+        Assert.True(success, "Pipeline must succeed for the Sportwagen golden sample");
+        Assert.True(File.Exists(Path.Combine(outputDir, "brickgraph.json")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "validation.json")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "model.mpd")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "parts.csv")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "instructions.md")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "report.md")));
+    }
+
+    [Fact]
+    public async Task FullPipeline_SportwagenGoldenSample_ValidationPasses()
+    {
+        var (outputDir, _) = await RunPipelineAsync(SportwagenPrompt, SportwagenAnalysisJson);
+
+        var validationJson = await File.ReadAllTextAsync(Path.Combine(outputDir, "validation.json"));
+        var validation = ValidationResult.FromJson(validationJson);
+
+        Assert.NotNull(validation);
+        Assert.True(validation.Valid, $"Sportwagen validation must pass. Issues: {string.Join("; ", validation.Issues.Select(i => i.Code))}");
+    }
+
+    // ── Golden sample: Verkaufsstand (BF-MVP1-028 §28.3) ─────────────────────
+
+    [Fact]
+    public async Task FullPipeline_VerkaufsstandGoldenSample_ProducesAllSixOutputFiles()
+    {
+        var (outputDir, success) = await RunPipelineAsync(VerkaufsstandPrompt, VerkaufsstandAnalysisJson);
+
+        Assert.True(success, "Pipeline must succeed for the Verkaufsstand golden sample");
+        Assert.True(File.Exists(Path.Combine(outputDir, "brickgraph.json")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "validation.json")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "model.mpd")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "parts.csv")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "instructions.md")));
+        Assert.True(File.Exists(Path.Combine(outputDir, "report.md")));
+    }
+
+    [Fact]
+    public async Task FullPipeline_VerkaufsstandGoldenSample_ValidationPasses()
+    {
+        var (outputDir, _) = await RunPipelineAsync(VerkaufsstandPrompt, VerkaufsstandAnalysisJson);
+
+        var validationJson = await File.ReadAllTextAsync(Path.Combine(outputDir, "validation.json"));
+        var validation = ValidationResult.FromJson(validationJson);
+
+        Assert.NotNull(validation);
+        Assert.True(validation.Valid, $"Verkaufsstand validation must pass. Issues: {string.Join("; ", validation.Issues.Select(i => i.Code))}");
+    }
+
     // ── Infeasible prompt ─────────────────────────────────────────────────────
 
     [Fact]
@@ -214,6 +326,43 @@ public sealed class FullGenerationPipelineTests : IDisposable
         return (outputDir, success);
     }
 
+    // ── Error-path integration tests (BF-MVP1-028 §28.2) ─────────────────────
+
+    [Fact]
+    public async Task FullPipeline_WhenOllamaIsUnavailable_UsesFallbackAndDoesNotThrow()
+    {
+        // §28.2: When Ollama is unavailable the service falls back to the deterministic analyzer.
+        // The pipeline must reach a terminal state without throwing.
+        var unavailableClient = new SimulatedUnavailableOllamaClient();
+        var ex = await Record.ExceptionAsync(() => RunPipelineWithClientAsync(KaffeemaschinePrompt, unavailableClient));
+
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public async Task FullPipeline_WhenAiReturnsInvalidJson_UsesFallbackAndSucceeds()
+    {
+        // §28.2: When AI returns unparseable JSON the service falls back to the deterministic analyzer.
+        // The pipeline must still produce output (fallback analysis).
+        var brokenClient = new FixedResponseOllamaClient(
+            Result<string>.Success("not valid json {{ garbage"));
+        var (outputDir, success) = await RunPipelineWithClientAsync(KaffeemaschinePrompt, brokenClient);
+
+        Assert.True(success, "Pipeline must succeed using fallback when AI returns invalid JSON");
+        Assert.True(File.Exists(Path.Combine(outputDir, "brickgraph.json")));
+    }
+
+    [Fact]
+    public async Task FullPipeline_WhenAiReturnsFailureResult_UsesFallbackAndSucceeds()
+    {
+        // §28.2: When the AI call itself fails (e.g. connection refused) the service falls back.
+        var failingClient = new FixedResponseOllamaClient(Result<string>.Failure("Connection refused"));
+        var (outputDir, success) = await RunPipelineWithClientAsync(KaffeemaschinePrompt, failingClient);
+
+        Assert.True(success, "Pipeline must succeed using fallback when AI call returns failure");
+        Assert.True(File.Exists(Path.Combine(outputDir, "brickgraph.json")));
+    }
+
     // ── Test data ─────────────────────────────────────────────────────────────
 
     private const string KaffeemaschinePrompt =
@@ -271,6 +420,72 @@ public sealed class FullGenerationPipelineTests : IDisposable
             { "name": "top",           "preferred_part": "3020",  "budget_fraction": 0.10 },
             { "name": "simple_detail", "preferred_part": "3024",  "budget_fraction": 0.05 }
           ]
+        }
+        """;
+
+    // ── Golden sample constants (BF-MVP1-028 §28.3) ───────────────────────────
+
+    private const string GartenhausPrompt =
+        "Erstelle ein kleines rotes Gartenhaus als Brick-Modell. Es soll einfach und stabil sein.";
+
+    private const string GartenhausAnalysisJson = """
+        {
+          "model_name": "Kleines Gartenhaus",
+          "model_category": "small_machine",
+          "target_parts": 60,
+          "main_color": "red",
+          "accent_color": "white",
+          "features": ["door", "window"],
+          "feasible": true,
+          "warnings": []
+        }
+        """;
+
+    private const string WerkbankPrompt =
+        "Erstelle eine graue Werkbank als Brick-Modell. Sie soll stabil und einfach baubar sein.";
+
+    private const string WerkbankAnalysisJson = """
+        {
+          "model_name": "Werkbank",
+          "model_category": "small_machine",
+          "target_parts": 40,
+          "main_color": "light_bluish_gray",
+          "accent_color": "dark_bluish_gray",
+          "features": ["worktop", "drawers"],
+          "feasible": true,
+          "warnings": []
+        }
+        """;
+
+    private const string SportwagenPrompt =
+        "Erstelle einen kleinen blauen Sportwagen als Brick-Modell. Er soll flach und dynamisch aussehen.";
+
+    private const string SportwagenAnalysisJson = """
+        {
+          "model_name": "Kleiner Sportwagen",
+          "model_category": "small_machine",
+          "target_parts": 55,
+          "main_color": "blue",
+          "accent_color": "dark_bluish_gray",
+          "features": ["hood", "spoiler"],
+          "feasible": true,
+          "warnings": []
+        }
+        """;
+
+    private const string VerkaufsstandPrompt =
+        "Erstelle einen gelben Verkaufsstand als Brick-Modell. Er soll kompakt und übersichtlich sein.";
+
+    private const string VerkaufsstandAnalysisJson = """
+        {
+          "model_name": "Verkaufsstand",
+          "model_category": "small_machine",
+          "target_parts": 45,
+          "main_color": "yellow",
+          "accent_color": "white",
+          "features": ["counter", "display"],
+          "feasible": true,
+          "warnings": []
         }
         """;
 }
