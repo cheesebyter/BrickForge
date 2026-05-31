@@ -24,10 +24,15 @@ public sealed class LDrawExporter
         var timestamp = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
 
         sb.AppendLine("0 FILE model.mpd");
-        sb.AppendLine("0 BrickForge generated MVP0 model");
+        sb.AppendLine("0 BrickForge generated model");
         sb.AppendLine("0 Name: model.mpd");
-        sb.AppendLine("0 Author: BrickForge MVP0");
+        sb.AppendLine("0 Author: BrickForge");
         sb.AppendLine($"0 !HISTORY Generated at {timestamp}");
+        sb.AppendLine("0 !LICENSE Licensed under CC BY 2.0 (BrickForge generated content)");
+        sb.AppendLine("0 LDraw Parts used in this file are from the LDraw Parts Library.");
+        sb.AppendLine("0 The LDraw Parts Library is licensed under the Creative Commons Attribution 2.0 license.");
+        sb.AppendLine("0 See https://www.ldraw.org/legal.html for details.");
+        sb.AppendLine("0 DISCLAIMER: This is not an official LEGO building instruction.");
         sb.AppendLine();
 
         var partsByStep = graph.Parts

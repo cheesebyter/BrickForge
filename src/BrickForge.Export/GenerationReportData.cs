@@ -26,4 +26,7 @@ public sealed class GenerationReportData
 
     /// <summary>UTC timestamp when this report was generated.</summary>
     public DateTimeOffset Timestamp { get; init; } = DateTimeOffset.UtcNow;
+
+    /// <summary>Name of the template selected for generation (e.g. "small_machine").</summary>
+    public string? TemplateName { get; init; }
 }

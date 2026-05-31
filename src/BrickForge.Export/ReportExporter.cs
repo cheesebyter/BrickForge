@@ -16,13 +16,17 @@ public sealed class ReportExporter
         "Dieses Dokument wurde automatisch durch BrickForge erzeugt. " +
         "Es handelt sich nicht um eine offizielle LEGO-Bauanleitung und nicht um ein von LEGO geprüftes Modell.";
 
-    private static readonly IReadOnlyList<string> Mvp0Limitations =
+    private const string InterpretationHint =
+        "Die erzeugten Modelle sind stilisierte Interpretationen eines Nutzer-Prompts. " +
+        "Sie sind keine originalgetreuen Nachbauten und wurden nicht für den physischen Aufbau optimiert.";
+
+    private static readonly IReadOnlyList<string> Mvp1Limitations =
     [
-        "Nur die Vorlage `small_machine` wird in MVP0 unterstützt.",
-        "Kollisionsprüfung und strukturelle Verbindungsprüfung sind in MVP0 nicht implementiert.",
+        "Kollisionsprüfung und strukturelle Verbindungsprüfung können in komplexen Modellen unvollständig sein.",
         "Farb- und Teileunterstützung ist auf die definierte Allowlist beschränkt.",
-        "Die erzeugten Modelle sind geometrisch vereinfacht und nicht für den physischen Aufbau optimiert.",
-        "LDraw-Ausgabe wurde nicht mit einem LDraw-Viewer verifiziert.",
+        "Die erzeugten Modelle sind geometrisch vereinfacht.",
+        "LDraw-Ausgabe wurde nicht mit einem LDraw-Viewer automatisch verifiziert.",
+        "LPub3D-Export ist optional und nicht Bestandteil der Standardausgabe.",
     ];
 
     /// <summary>
@@ -64,6 +68,35 @@ public sealed class ReportExporter
             sb.AppendLine($"| Akzentfarbe | {analysis.AccentColor} |");
             sb.AppendLine();
         }
+
+        // Template
+        if (!string.IsNullOrWhiteSpace(data.TemplateName))
+        {
+            sb.AppendLine("## Gewähltes Template");
+            sb.AppendLine();
+            sb.AppendLine($"- **Template:** `{data.TemplateName}`");
+            sb.AppendLine();
+        }
+
+        // Color list
+        sb.AppendLine("## Farbliste");
+        sb.AppendLine();
+        var colors = graph.Parts
+            .Select(p => p.Color)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToList();
+
+        if (colors.Count == 0)
+        {
+            sb.AppendLine("_Keine Farben ermittelt._");
+        }
+        else
+        {
+            foreach (var color in colors)
+                sb.AppendLine($"- {color}");
+        }
+        sb.AppendLine();
 
         // Parts count
         sb.AppendLine("## Teileanzahl");
@@ -110,10 +143,16 @@ public sealed class ReportExporter
         }
         sb.AppendLine();
 
-        // MVP0 limitations
-        sb.AppendLine("## Bekannte MVP0-Einschränkungen");
+        // Interpretation hint
+        sb.AppendLine("## Stilisierte Interpretation");
         sb.AppendLine();
-        foreach (var limitation in Mvp0Limitations)
+        sb.AppendLine(InterpretationHint);
+        sb.AppendLine();
+
+        // Limitations
+        sb.AppendLine("## Bekannte Einschränkungen");
+        sb.AppendLine();
+        foreach (var limitation in Mvp1Limitations)
             sb.AppendLine($"- {limitation}");
         sb.AppendLine();
 

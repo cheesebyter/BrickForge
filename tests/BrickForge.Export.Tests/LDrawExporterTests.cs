@@ -40,7 +40,7 @@ public sealed class LDrawExporterTests
 
         Assert.True(result.Success);
         Assert.Contains("0 FILE model.mpd", result.Content);
-        Assert.Contains("0 Author: BrickForge MVP0", result.Content);
+        Assert.Contains("0 Author: BrickForge", result.Content);
         Assert.Contains("0 !HISTORY Generated at", result.Content);
     }
 
@@ -117,5 +117,27 @@ public sealed class LDrawExporterTests
         var bytes = System.Text.Encoding.UTF8.GetBytes(result.Content!);
         var roundTripped = System.Text.Encoding.UTF8.GetString(bytes);
         Assert.Equal(result.Content, roundTripped);
+    }
+
+    [Fact]
+    public void Export_ContainsLDrawAttribution()
+    {
+        var graph = BuildSinglePartGraph();
+        var result = _exporter.Export(graph);
+
+        Assert.True(result.Success);
+        Assert.Contains("LDraw Parts Library", result.Content);
+        Assert.Contains("Creative Commons Attribution 2.0", result.Content);
+        Assert.Contains("ldraw.org/legal.html", result.Content);
+    }
+
+    [Fact]
+    public void Export_ContainsDisclaimer()
+    {
+        var graph = BuildSinglePartGraph();
+        var result = _exporter.Export(graph);
+
+        Assert.True(result.Success);
+        Assert.Contains("not an official LEGO building instruction", result.Content);
     }
 }

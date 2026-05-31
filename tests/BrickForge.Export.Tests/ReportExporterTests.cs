@@ -129,14 +129,52 @@ public sealed class ReportExporterTests
     }
 
     [Fact]
-    public void Export_ContainsMvp0Limitations()
+    public void Export_ContainsMvp1Limitations()
     {
         var data = BuildData();
         var result = _exporter.Export(BuildGraph(), data);
 
         Assert.True(result.Success);
-        Assert.Contains("MVP0", result.Content);
         Assert.Contains("Einschränkungen", result.Content);
+    }
+
+    [Fact]
+    public void Export_ContainsColorList()
+    {
+        var data = BuildData();
+        var result = _exporter.Export(BuildGraph(), data);
+
+        Assert.True(result.Success);
+        Assert.Contains("Farbliste", result.Content);
+        Assert.Contains("black", result.Content);
+    }
+
+    [Fact]
+    public void Export_ContainsTemplateName_WhenProvided()
+    {
+        var data = new GenerationReportData
+        {
+            OriginalPrompt = "Test",
+            TemplateName = "small_machine",
+            AnalysisResult = new PromptAnalysisResult { ModelName = "T", ModelCategory = "small_machine", TargetParts = 10 },
+            ValidationResult = ValidationResult.FromIssues([], 6),
+            GeneratedFiles = [],
+            Timestamp = DateTimeOffset.UtcNow
+        };
+        var result = _exporter.Export(BuildGraph(), data);
+
+        Assert.True(result.Success);
+        Assert.Contains("small_machine", result.Content);
+    }
+
+    [Fact]
+    public void Export_ContainsInterpretationHint()
+    {
+        var data = BuildData();
+        var result = _exporter.Export(BuildGraph(), data);
+
+        Assert.True(result.Success);
+        Assert.Contains("stilisierte Interpretation", result.Content);
     }
 
     [Fact]

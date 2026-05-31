@@ -198,6 +198,14 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
             else
                 _logger.LogWarning("Markdown export skipped: {Error}", mdResult.ErrorMessage);
 
+            // instructions.html (optional)
+            var htmlResult = new HtmlInstructionsExporter().Export(graph);
+            if (htmlResult.Success)
+                await WriteFileAndRecordAsync(job, outputDir, "instructions.html", htmlResult.Content!,
+                    generatedFileNames, cancellationToken);
+            else
+                _logger.LogWarning("HTML instructions export skipped: {Error}", htmlResult.ErrorMessage);
+
             // report.md
             var reportData = new GenerationReportData
             {
@@ -206,7 +214,8 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
                 AnalysisResult = analysis,
                 ValidationResult = validation,
                 GeneratedFiles = generatedFileNames.AsReadOnly(),
-                Timestamp = DateTimeOffset.UtcNow
+                Timestamp = DateTimeOffset.UtcNow,
+                TemplateName = template.TemplateId
             };
 
             var reportResult = new ReportExporter().Export(graph, reportData);

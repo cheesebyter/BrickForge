@@ -9,9 +9,17 @@ namespace BrickForge.Export;
 /// </summary>
 public sealed class MarkdownInstructionsExporter
 {
-    private const string LegalDisclaimer =
+    internal const string LegalDisclaimer =
         "Dieses Dokument wurde automatisch durch BrickForge erzeugt. " +
         "Es handelt sich nicht um eine offizielle LEGO-Bauanleitung und nicht um ein von LEGO geprüftes Modell.";
+
+    private const string InterpretationNotice =
+        "Dieses Modell ist eine fanbasierte, stilisierte Interpretation (MOC – My Own Creation). " +
+        "Es ist kein lizenziertes LEGO-Produkt.";
+
+    private const string LDrawExportHint =
+        "Die Datei `model.mpd` kann mit einem LDraw-kompatiblen Viewer geöffnet werden " +
+        "(z. B. LDraw.org Viewer, LeoCAD, BrickLink Studio – optional).";
 
     /// <summary>
     /// Produces the content of <c>instructions.md</c> from the given graph.
@@ -26,6 +34,9 @@ public sealed class MarkdownInstructionsExporter
         var modelName = string.IsNullOrWhiteSpace(graph.Model.Name) ? "Brick Model" : graph.Model.Name;
 
         sb.AppendLine($"# {modelName}");
+        sb.AppendLine();
+        sb.AppendLine($"**Beschreibung:** Klemmbaustein-kompatibles Brick-Modell, erzeugt durch BrickForge.");
+        sb.AppendLine($"**Teile gesamt:** {graph.Parts.Count}");
         sb.AppendLine();
         sb.AppendLine($"> {LegalDisclaimer}");
         sb.AppendLine();
@@ -97,6 +108,17 @@ public sealed class MarkdownInstructionsExporter
                 sb.AppendLine();
             }
         }
+
+        // LDraw export hint
+        sb.AppendLine("## LDraw-Export");
+        sb.AppendLine();
+        sb.AppendLine(LDrawExportHint);
+        sb.AppendLine();
+
+        // Interpretation notice
+        sb.AppendLine("---");
+        sb.AppendLine();
+        sb.AppendLine($"_{InterpretationNotice}_");
 
         return ExportResult.Ok(sb.ToString());
     }
