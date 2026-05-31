@@ -1,7 +1,9 @@
 using BrickForge.Ai.Analysis;
 using BrickForge.BrickGraph.Generation;
+using BrickForge.BrickGraph.Repair;
 using BrickForge.BrickGraph.Templates;
 using BrickForge.BrickGraph.Validation;
+using BrickForge.Core.Agents;
 using BrickForge.Core.Jobs;
 using BrickForge.Core.Options;
 using BrickForge.Core.Pipelines;
@@ -19,8 +21,9 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
 {
     private readonly IJobRepository _jobs;
     private readonly IPromptAnalyzer _promptAnalyzer;
-    private readonly SmallMachineGenerator _generator;
+    private readonly TemplateBasedGenerator _generator;
     private readonly BrickGraphValidator _validator;
+    private readonly BrickGraphRepairAgent _repairAgent;
     private readonly TemplateRegistry _templateRegistry;
     private readonly GenerationOptions _generationOptions;
     private readonly ILogger<GenerationPipelineService> _logger;
@@ -28,8 +31,9 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
     public GenerationPipelineService(
         IJobRepository jobs,
         IPromptAnalyzer promptAnalyzer,
-        SmallMachineGenerator generator,
+        TemplateBasedGenerator generator,
         BrickGraphValidator validator,
+        BrickGraphRepairAgent repairAgent,
         TemplateRegistry templateRegistry,
         IOptions<GenerationOptions> genOptions,
         ILogger<GenerationPipelineService> logger)
@@ -38,6 +42,7 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
         _promptAnalyzer = promptAnalyzer;
         _generator = generator;
         _validator = validator;
+        _repairAgent = repairAgent;
         _templateRegistry = templateRegistry;
         _generationOptions = genOptions.Value;
         _logger = logger;
@@ -106,7 +111,34 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
             job.Status = JobStatus.Validating;
             await _jobs.UpdateAsync(job, cancellationToken);
 
-            var validation = _validator.Validate(graph);
+            var validation = _validator.Validate(graph, template.MaxParts > 0 ? template.MaxParts : null);
+            var wasRepaired = false;
+
+            // Step 4b: Repair if validation failed
+            if (!validation.Valid)
+            {
+                job.Status = JobStatus.Repairing;
+                await _jobs.UpdateAsync(job, cancellationToken);
+
+                _logger.LogInformation("Job {JobId}: validation failed, attempting repair.", jobId);
+
+                var repairCtx = new AgentContext { JobId = jobId };
+                var repairReq = new RepairRequest(graph, template, template.MaxParts > 0 ? template.MaxParts : 80);
+                var repairResult = await _repairAgent.RunAsync(repairReq, repairCtx, cancellationToken);
+
+                if (repairResult.IsSuccess)
+                {
+                    graph = repairResult.Value!;
+                    validation = _validator.Validate(graph, template.MaxParts > 0 ? template.MaxParts : null);
+                    wasRepaired = true;
+                    _logger.LogInformation("Job {JobId}: repair applied, re-validated.", jobId);
+                }
+                else
+                {
+                    _logger.LogWarning("Job {JobId}: repair agent failed: {Error}", jobId, repairResult.ErrorMessage);
+                }
+            }
+
             job.ValidationScore = validation.Score;
 
             if (!validation.Valid)
@@ -183,6 +215,26 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
                     generatedFileNames, cancellationToken);
             else
                 _logger.LogWarning("Report export skipped: {Error}", reportResult.ErrorMessage);
+
+            // generation.json
+            var genJsonData = new GenerationJsonData
+            {
+                JobId          = job.Id,
+                OriginalPrompt = job.Prompt,
+                TemplateName   = template.TemplateId,
+                AnalysisResult = analysis,
+                ValidationResult = validation,
+                WasRepaired    = wasRepaired,
+                GeneratedFiles = generatedFileNames.AsReadOnly(),
+                Timestamp      = DateTimeOffset.UtcNow
+            };
+
+            var genJsonResult = new GenerationJsonExporter().Export(graph, genJsonData);
+            if (genJsonResult.Success)
+                await WriteFileAndRecordAsync(job, outputDir, "generation.json", genJsonResult.Content!,
+                    generatedFileNames, cancellationToken);
+            else
+                _logger.LogWarning("generation.json export skipped: {Error}", genJsonResult.ErrorMessage);
 
             // Final status
             job.Status = validation.Issues.Count > 0

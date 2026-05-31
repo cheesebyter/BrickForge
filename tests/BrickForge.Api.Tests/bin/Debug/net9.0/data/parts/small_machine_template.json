@@ -6,6 +6,8 @@
   "height_layers": 4,
   "default_main_color": "black",
   "default_accent_color": "light_bluish_gray",
+  "max_parts": 120,
+  "allowed_parts": ["brick", "plate", "tile", "slope", "round"],
   "subassemblies": [
     {
       "name": "base",

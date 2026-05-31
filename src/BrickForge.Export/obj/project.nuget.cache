@@ -1,8 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "2+4L1wJEA4Q=",
+  "dgSpecHash": "zOLwPOlp5KU=",
   "success": true,
   "projectFilePath": "E:\\Project\\BrickForge\\src\\BrickForge.Export\\BrickForge.Export.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\Andy\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\9.0.4\\microsoft.extensions.dependencyinjection.abstractions.9.0.4.nupkg.sha512",
+    "C:\\Users\\Andy\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\9.0.4\\microsoft.extensions.logging.abstractions.9.0.4.nupkg.sha512"
+  ],
   "logs": []
 }

@@ -104,3 +104,5 @@ E:\Project\BrickForge\tests\BrickForge.Export.Tests\obj\Debug\net9.0\refint\Bric
 E:\Project\BrickForge\tests\BrickForge.Export.Tests\obj\Debug\net9.0\BrickForge.Export.Tests.pdb
 E:\Project\BrickForge\tests\BrickForge.Export.Tests\obj\Debug\net9.0\BrickForge.Export.Tests.genruntimeconfig.cache
 E:\Project\BrickForge\tests\BrickForge.Export.Tests\obj\Debug\net9.0\ref\BrickForge.Export.Tests.dll
+E:\Project\BrickForge\tests\BrickForge.Export.Tests\bin\Debug\net9.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+E:\Project\BrickForge\tests\BrickForge.Export.Tests\bin\Debug\net9.0\Microsoft.Extensions.Logging.Abstractions.dll

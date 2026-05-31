@@ -41,6 +41,17 @@ public sealed class TemplateRegistry
     }
 
     /// <summary>
+    /// Loads all template JSON files from <paramref name="directoryPath"/>.
+    /// Files must match the pattern <c>*_template.json</c>.
+    /// </summary>
+    public static TemplateRegistry FromDirectory(string directoryPath)
+    {
+        var files = Directory.GetFiles(directoryPath, "*_template.json", SearchOption.TopDirectoryOnly);
+        var jsons = files.Select(File.ReadAllText);
+        return FromJsonCollection(jsons);
+    }
+
+    /// <summary>
     /// Returns the template for the given ID, or null if not found.
     /// </summary>
     public BrickModelTemplate? FindTemplate(string templateId)

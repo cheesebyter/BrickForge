@@ -28,8 +28,8 @@
       <Link>data\parts\supported-colors.json</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\data\parts\small_machine_template.json">
-      <Link>data\parts\small_machine_template.json</Link>
+    <Content Include="..\..\data\parts\*_template.json">
+      <Link>data\parts\%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

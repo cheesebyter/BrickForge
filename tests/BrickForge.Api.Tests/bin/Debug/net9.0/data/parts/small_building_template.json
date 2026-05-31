@@ -1,0 +1,43 @@
+{
+  "template_id": "small_building",
+  "display_name": "Small Building (Gartenhaus / Hütte)",
+  "width_studs": 8,
+  "depth_studs": 6,
+  "height_layers": 5,
+  "default_main_color": "red",
+  "default_accent_color": "white",
+  "max_parts": 150,
+  "allowed_parts": ["brick", "plate", "tile", "slope"],
+  "subassemblies": [
+    {
+      "name": "base",
+      "preferred_part": "3020",
+      "color": null,
+      "budget_fraction": 0.15
+    },
+    {
+      "name": "main_body",
+      "preferred_part": "3001",
+      "color": null,
+      "budget_fraction": 0.50
+    },
+    {
+      "name": "front_panel",
+      "preferred_part": "2431",
+      "color": null,
+      "budget_fraction": 0.15
+    },
+    {
+      "name": "top",
+      "preferred_part": "3020",
+      "color": null,
+      "budget_fraction": 0.15
+    },
+    {
+      "name": "simple_detail",
+      "preferred_part": "3024",
+      "color": null,
+      "budget_fraction": 0.05
+    }
+  ]
+}

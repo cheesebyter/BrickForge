@@ -453,3 +453,9 @@ E:\Project\BrickForge\tests\BrickForge.Api.Tests\bin\Debug\net9.0\runtimes\win-a
 E:\Project\BrickForge\tests\BrickForge.Api.Tests\bin\Debug\net9.0\runtimes\win-arm64\native\e_sqlite3.dll
 E:\Project\BrickForge\tests\BrickForge.Api.Tests\bin\Debug\net9.0\runtimes\win-x64\native\e_sqlite3.dll
 E:\Project\BrickForge\tests\BrickForge.Api.Tests\bin\Debug\net9.0\runtimes\win-x86\native\e_sqlite3.dll
+E:\Project\BrickForge\tests\BrickForge.Api.Tests\bin\Debug\net9.0\data\parts\display_object_template.json
+E:\Project\BrickForge\tests\BrickForge.Api.Tests\bin\Debug\net9.0\data\parts\furniture_template.json
+E:\Project\BrickForge\tests\BrickForge.Api.Tests\bin\Debug\net9.0\data\parts\small_building_template.json
+E:\Project\BrickForge\tests\BrickForge.Api.Tests\bin\Debug\net9.0\data\parts\small_vehicle_template.json
+E:\Project\BrickForge\tests\BrickForge.Api.Tests\bin\Debug\net9.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+E:\Project\BrickForge\tests\BrickForge.Api.Tests\bin\Debug\net9.0\Microsoft.Extensions.Logging.Abstractions.dll

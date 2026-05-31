@@ -1,0 +1,43 @@
+{
+  "template_id": "display_object",
+  "display_name": "Display Object (Verkaufsstand / Ausstellungsstück)",
+  "width_studs": 4,
+  "depth_studs": 4,
+  "height_layers": 6,
+  "default_main_color": "yellow",
+  "default_accent_color": "white",
+  "max_parts": 60,
+  "allowed_parts": ["brick", "plate", "tile", "round"],
+  "subassemblies": [
+    {
+      "name": "base",
+      "preferred_part": "3022",
+      "color": null,
+      "budget_fraction": 0.10
+    },
+    {
+      "name": "main_body",
+      "preferred_part": "3005",
+      "color": null,
+      "budget_fraction": 0.55
+    },
+    {
+      "name": "front_panel",
+      "preferred_part": "3069b",
+      "color": null,
+      "budget_fraction": 0.15
+    },
+    {
+      "name": "top",
+      "preferred_part": "3022",
+      "color": null,
+      "budget_fraction": 0.15
+    },
+    {
+      "name": "simple_detail",
+      "preferred_part": "3024",
+      "color": null,
+      "budget_fraction": 0.05
+    }
+  ]
+}

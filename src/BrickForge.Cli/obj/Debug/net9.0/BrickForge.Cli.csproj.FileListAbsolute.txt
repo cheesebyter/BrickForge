@@ -35,3 +35,5 @@ E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.P
 E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\data\parts\supported-parts.json
 E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\data\parts\supported-colors.json
 E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\data\parts\small_machine_template.json
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+E:\Project\BrickForge\src\BrickForge.Cli\bin\Debug\net9.0\Microsoft.Extensions.Logging.Abstractions.dll

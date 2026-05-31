@@ -7,6 +7,7 @@ using BrickForge.Api.Services;
 using BrickForge.Api.Workers;
 using BrickForge.BrickGraph.Generation;
 using BrickForge.BrickGraph.Parts;
+using BrickForge.BrickGraph.Repair;
 using BrickForge.BrickGraph.Templates;
 using BrickForge.BrickGraph.Validation;
 using BrickForge.Core.Jobs;
@@ -66,9 +67,8 @@ try
     var partsDir = Path.Combine(AppContext.BaseDirectory, "data", "parts");
     var partsJson = File.ReadAllText(Path.Combine(partsDir, "supported-parts.json"));
     var colorsJson = File.ReadAllText(Path.Combine(partsDir, "supported-colors.json"));
-    var templateJson = File.ReadAllText(Path.Combine(partsDir, "small_machine_template.json"));
     partsRegistry = SupportedPartsRegistry.FromJson(partsJson, colorsJson);
-    templateRegistry = TemplateRegistry.FromJson(templateJson);
+    templateRegistry = TemplateRegistry.FromDirectory(partsDir);
 }
 catch (Exception ex)
 {
@@ -80,7 +80,9 @@ catch (Exception ex)
 builder.Services.AddSingleton(partsRegistry);
 builder.Services.AddSingleton(templateRegistry);
 builder.Services.AddSingleton<SmallMachineGenerator>();
+builder.Services.AddSingleton<TemplateBasedGenerator>();
 builder.Services.AddSingleton<BrickGraphValidator>();
+builder.Services.AddSingleton<BrickGraphRepairAgent>();
 
 // ── Job queue and pipeline ─────────────────────────────────────────────────────
 builder.Services.AddSingleton<IJobQueue, DefaultJobQueue>();

@@ -102,3 +102,5 @@ E:\Project\BrickForge\tests\BrickForge.BrickGraph.Tests\obj\Debug\net9.0\refint\
 E:\Project\BrickForge\tests\BrickForge.BrickGraph.Tests\obj\Debug\net9.0\BrickForge.BrickGraph.Tests.pdb
 E:\Project\BrickForge\tests\BrickForge.BrickGraph.Tests\obj\Debug\net9.0\BrickForge.BrickGraph.Tests.genruntimeconfig.cache
 E:\Project\BrickForge\tests\BrickForge.BrickGraph.Tests\obj\Debug\net9.0\ref\BrickForge.BrickGraph.Tests.dll
+E:\Project\BrickForge\tests\BrickForge.BrickGraph.Tests\bin\Debug\net9.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+E:\Project\BrickForge\tests\BrickForge.BrickGraph.Tests\bin\Debug\net9.0\Microsoft.Extensions.Logging.Abstractions.dll

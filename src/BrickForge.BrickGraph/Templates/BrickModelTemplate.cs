@@ -53,6 +53,20 @@ public sealed class BrickModelTemplate
     [JsonPropertyName("default_accent_color")]
     public string DefaultAccentColor { get; init; } = "light_bluish_gray";
 
+    /// <summary>
+    /// Maximum number of parts allowed for this template.
+    /// Overrides the validator's global default when > 0.
+    /// </summary>
+    [JsonPropertyName("max_parts")]
+    public int MaxParts { get; init; } = 80;
+
+    /// <summary>
+    /// Part family tags that are permitted for this template (e.g. "brick", "plate", "tile", "slope").
+    /// An empty list means all supported parts are allowed.
+    /// </summary>
+    [JsonPropertyName("allowed_parts")]
+    public IReadOnlyList<string> AllowedParts { get; init; } = [];
+
     [JsonPropertyName("subassemblies")]
     public IReadOnlyList<TemplateSubassembly> Subassemblies { get; init; } = [];
 }

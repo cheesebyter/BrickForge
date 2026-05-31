@@ -4,6 +4,7 @@ using BrickForge.Api.Persistence;
 using BrickForge.Api.Services;
 using BrickForge.BrickGraph.Generation;
 using BrickForge.BrickGraph.Parts;
+using BrickForge.BrickGraph.Repair;
 using BrickForge.BrickGraph.Templates;
 using BrickForge.BrickGraph.Validation;
 using BrickForge.Core.Jobs;
@@ -33,14 +34,16 @@ public sealed class GenerationPipelineServiceTests : IDisposable
 
         var ollamaClient = new MockOllamaClient();
         var promptAnalyzer = new PromptAnalysisService(ollamaClient, ollamaOpts, genOpts);
-        var generator = new SmallMachineGenerator(partsRegistry);
+        var generator = new TemplateBasedGenerator(partsRegistry);
         var validator = new BrickGraphValidator(partsRegistry);
+        var repairAgent = new BrickGraphRepairAgent(partsRegistry, NullLogger<BrickGraphRepairAgent>.Instance);
 
         _sut = new GenerationPipelineService(
             _repo,
             promptAnalyzer,
             generator,
             validator,
+            repairAgent,
             templateRegistry,
             Options.Create(genOpts),
             NullLogger<GenerationPipelineService>.Instance);

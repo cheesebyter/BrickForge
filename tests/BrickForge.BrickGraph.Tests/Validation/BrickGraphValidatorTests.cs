@@ -33,7 +33,7 @@ public sealed class BrickGraphValidatorTests
     {
         var graph = new BrickGraph();
         for (int i = 1; i <= 81; i++)
-            graph.AddPart(MakeValidPart($"part_{i:000}"));
+            graph.AddPart(MakeValidPart($"part_{i:000}", i - 1));
 
         var result = _validator.Validate(graph);
 
@@ -46,7 +46,7 @@ public sealed class BrickGraphValidatorTests
     {
         var graph = new BrickGraph();
         for (int i = 1; i <= 80; i++)
-            graph.AddPart(MakeValidPart($"part_{i:000}"));
+            graph.AddPart(MakeValidPart($"part_{i:000}", i - 1));
 
         var result = _validator.Validate(graph);
 
@@ -172,12 +172,204 @@ public sealed class BrickGraphValidatorTests
     [Fact]
     public void Validate_Score_IsProportionalToPassedChecks()
     {
-        var graph = new BrickGraph(); // empty → EMPTY_PARTS (1 failure of 6)
+        var graph = new BrickGraph(); // empty → EMPTY_PARTS (1 failure)
 
         var result = _validator.Validate(graph);
 
         Assert.True(result.Score < 1.0f);
         Assert.True(result.Score >= 0.0f);
+    }
+
+    // ── MaxParts override ─────────────────────────────────────────────────────
+
+    [Fact]
+    public void Validate_WhenMaxPartsOverrideExceeded_ReportsTooManyParts()
+    {
+        var graph = new BrickGraph();
+        for (int i = 1; i <= 11; i++)
+            graph.AddPart(MakeValidPart($"part_{i:000}", i));
+
+        var result = _validator.Validate(graph, maxParts: 10);
+
+        Assert.Contains(result.Issues, i => i.Code == "TOO_MANY_PARTS");
+    }
+
+    [Fact]
+    public void Validate_WhenMaxPartsOverrideNotExceeded_DoesNotReportTooManyParts()
+    {
+        var graph = new BrickGraph();
+        for (int i = 1; i <= 10; i++)
+            graph.AddPart(MakeValidPart($"part_{i:000}", i));
+
+        var result = _validator.Validate(graph, maxParts: 10);
+
+        Assert.DoesNotContain(result.Issues, i => i.Code == "TOO_MANY_PARTS");
+    }
+
+    // ── CollisionCheck ────────────────────────────────────────────────────────
+
+    [Fact]
+    public void Validate_WhenTwoPartsSharePosition_ReturnsHighSeverityCollisionIssue()
+    {
+        var graph = new BrickGraph();
+        graph.AddPart(new BrickPartInstance
+        {
+            InstanceId = "part_001",
+            PartNumber = "3001",
+            PartName = "Brick 2 x 4",
+            Color = "black",
+            Position = [0f, 0f, 0f],
+            Step = 1
+        });
+        graph.AddPart(new BrickPartInstance
+        {
+            InstanceId = "part_002",
+            PartNumber = "3001",
+            PartName = "Brick 2 x 4",
+            Color = "black",
+            Position = [0f, 0f, 0f],  // same position
+            Step = 2
+        });
+
+        var result = _validator.Validate(graph);
+
+        Assert.Contains(result.Issues, i =>
+            i.Code == "POSITION_COLLISION" && i.Severity == ValidationSeverity.High);
+    }
+
+    [Fact]
+    public void Validate_WhenAllPartsHaveUniquePositions_NoCollisionIssue()
+    {
+        var graph = new BrickGraph();
+        graph.AddPart(MakeValidPart("part_001", 0));
+        graph.AddPart(MakeValidPart("part_002", 1));
+        graph.AddPart(MakeValidPart("part_003", 2));
+
+        var result = _validator.Validate(graph);
+
+        Assert.DoesNotContain(result.Issues, i => i.Code == "POSITION_COLLISION");
+    }
+
+    // ── FloatingPartsCheck ────────────────────────────────────────────────────
+
+    [Fact]
+    public void Validate_WhenNoPartAtGroundLevel_ReturnsMediumSeverityFloatingIssue()
+    {
+        var graph = new BrickGraph();
+        graph.AddPart(new BrickPartInstance
+        {
+            InstanceId = "part_001",
+            PartNumber = "3001",
+            PartName = "Brick 2 x 4",
+            Color = "black",
+            Position = [0f, 24f, 0f],  // y != 0, not at ground
+            Step = 1
+        });
+
+        var result = _validator.Validate(graph);
+
+        Assert.Contains(result.Issues, i =>
+            i.Code == "NO_BASE_PARTS" && i.Severity == ValidationSeverity.Medium);
+    }
+
+    [Fact]
+    public void Validate_WhenPartAtGroundLevel_NoFloatingIssue()
+    {
+        var graph = new BrickGraph();
+        graph.AddPart(MakeValidPart("part_001", 0));  // y = 0
+
+        var result = _validator.Validate(graph);
+
+        Assert.DoesNotContain(result.Issues, i => i.Code == "NO_BASE_PARTS");
+    }
+
+    // ── MonotonicStepsCheck ───────────────────────────────────────────────────
+
+    [Fact]
+    public void Validate_WhenStepsHaveLargeGaps_ReturnsMediumSeverityMonotonicIssue()
+    {
+        var graph = new BrickGraph();
+        graph.AddPart(new BrickPartInstance
+        {
+            InstanceId = "part_001",
+            PartNumber = "3001",
+            PartName = "Brick 2 x 4",
+            Color = "black",
+            Position = [0f, 0f, 0f],
+            Step = 1
+        });
+        graph.AddPart(new BrickPartInstance
+        {
+            InstanceId = "part_002",
+            PartNumber = "3001",
+            PartName = "Brick 2 x 4",
+            Color = "black",
+            Position = [20f, 0f, 0f],
+            Step = 100  // huge gap
+        });
+
+        var result = _validator.Validate(graph);
+
+        Assert.Contains(result.Issues, i =>
+            i.Code == "NON_MONOTONIC_STEPS" && i.Severity == ValidationSeverity.Medium);
+    }
+
+    [Fact]
+    public void Validate_WhenStepsAreSequential_NoMonotonicIssue()
+    {
+        var graph = new BrickGraph();
+        for (int i = 1; i <= 5; i++)
+            graph.AddPart(MakeValidPart($"part_{i:000}", i - 1, i));
+
+        var result = _validator.Validate(graph);
+
+        Assert.DoesNotContain(result.Issues, i => i.Code == "NON_MONOTONIC_STEPS");
+    }
+
+    // ── ConnectedStructureCheck ───────────────────────────────────────────────
+
+    [Fact]
+    public void Validate_WhenNoPartInStep1_ReturnsMediumSeverityConnectedIssue()
+    {
+        var graph = new BrickGraph();
+        graph.AddPart(new BrickPartInstance
+        {
+            InstanceId = "part_001",
+            PartNumber = "3001",
+            PartName = "Brick 2 x 4",
+            Color = "black",
+            Position = [0f, 0f, 0f],
+            Step = 2  // starts at step 2, no step 1
+        });
+
+        var result = _validator.Validate(graph);
+
+        Assert.Contains(result.Issues, i =>
+            i.Code == "NO_BASE_STEP" && i.Severity == ValidationSeverity.Medium);
+    }
+
+    [Fact]
+    public void Validate_WhenPartExistsInStep1_NoConnectedIssue()
+    {
+        var graph = new BrickGraph();
+        graph.AddPart(MakeValidPart("part_001"));  // step = 1
+
+        var result = _validator.Validate(graph);
+
+        Assert.DoesNotContain(result.Issues, i => i.Code == "NO_BASE_STEP");
+    }
+
+    // ── ExportSyntaxCheck ─────────────────────────────────────────────────────
+
+    [Fact]
+    public void Validate_WhenGraphSerializesSuccessfully_NoExportSyntaxIssue()
+    {
+        var graph = new BrickGraph();
+        graph.AddPart(MakeValidPart("part_001"));
+
+        var result = _validator.Validate(graph);
+
+        Assert.DoesNotContain(result.Issues, i => i.Code == "EXPORT_SYNTAX_ERROR");
     }
 
     // ── JSON serialization ────────────────────────────────────────────────────
@@ -223,14 +415,17 @@ public sealed class BrickGraphValidatorTests
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static BrickPartInstance MakeValidPart(string instanceId) =>
+        MakeValidPart(instanceId, 0);
+
+    private static BrickPartInstance MakeValidPart(string instanceId, int positionIndex, int step = 1) =>
         new()
         {
             InstanceId = instanceId,
             PartNumber = "3001",
             PartName = "Brick 2 x 4",
             Color = "black",
-            Position = [0f, 0f, 0f],
-            Step = 1
+            Position = [positionIndex * 20f, 0f, 0f],
+            Step = step
         };
 
     private static SupportedPartsRegistry BuildRegistry()
