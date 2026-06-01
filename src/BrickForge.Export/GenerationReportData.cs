@@ -1,4 +1,5 @@
 using BrickForge.BrickGraph.Validation;
+using BrickForge.Core.Agents;
 using BrickForge.Core.Ai;
 
 namespace BrickForge.Export;
@@ -29,4 +30,10 @@ public sealed class GenerationReportData
 
     /// <summary>Name of the template selected for generation (e.g. "small_machine").</summary>
     public string? TemplateName { get; init; }
+
+    /// <summary>Per-agent execution metrics (BF-MVP1-044). Empty when not collected.</summary>
+    public IReadOnlyList<AgentMetrics> AgentMetrics { get; init; } = [];
+
+    /// <summary>Job-level aggregated metrics (BF-MVP1-044). Null when not collected.</summary>
+    public JobMetrics? JobMetrics { get; init; }
 }

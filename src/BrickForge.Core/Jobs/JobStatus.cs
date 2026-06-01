@@ -7,6 +7,7 @@ public enum JobStatus
 {
     Queued,
     AnalyzingPrompt,
+    SelectingTemplate,
     PlanningModel,
     GeneratingBrickGraph,
     Validating,

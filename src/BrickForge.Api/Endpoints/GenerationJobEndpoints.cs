@@ -2,6 +2,7 @@ using BrickForge.Api.Dtos;
 using BrickForge.Core.Jobs;
 using BrickForge.Core.Options;
 using BrickForge.Core.Pipelines;
+using BrickForge.Core.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
@@ -12,8 +13,6 @@ namespace BrickForge.Api.Endpoints;
 /// </summary>
 public static class GenerationJobEndpoints
 {
-    private const int MinPromptLength = 1;
-
     public static void MapGenerationJobEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/generation-jobs").WithTags("GenerationJobs");
@@ -52,21 +51,12 @@ public static class GenerationJobEndpoints
         var maxLen = genOptions.Value.MaxPromptLength;
         var correlationId = ctx.TraceIdentifier;
 
-        if (string.IsNullOrWhiteSpace(request.Prompt)
-            || request.Prompt.Trim().Length < MinPromptLength)
+        var validation = PromptValidator.Validate(request.Prompt, maxLen);
+        if (!validation.IsSuccess)
         {
             return Results.BadRequest(new ApiErrorResponse(
                 "VALIDATION_ERROR",
-                "Prompt must not be empty.",
-                null,
-                correlationId));
-        }
-
-        if (request.Prompt.Length > maxLen)
-        {
-            return Results.BadRequest(new ApiErrorResponse(
-                "VALIDATION_ERROR",
-                $"Prompt must not exceed {maxLen} characters.",
+                validation.ErrorMessage!,
                 null,
                 correlationId));
         }
@@ -113,7 +103,9 @@ public static class GenerationJobEndpoints
             job.ActualParts,
             job.ValidationScore,
             job.ErrorMessage,
-            job.CreatedAt);
+            job.CreatedAt,
+            job.MainColor,
+            job.AccentColor);
 
         return Results.Ok(response);
     }

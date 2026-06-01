@@ -14,7 +14,7 @@
       --muted: #666;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 1.5rem; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 1.5rem; max-width: 760px; }
     h1 { color: var(--primary); margin-bottom: 0.25rem; }
     .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
     .disclaimer {
@@ -33,21 +33,41 @@
     .row > .field { flex: 1; min-width: 180px; }
     .field { margin-bottom: 0.75rem; }
     .hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+    /* BF-MVP1-040: local AI checkbox */
+    .checkbox-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.83rem; color: var(--muted); margin-bottom: 0.75rem; }
+    .checkbox-row label { display: inline; font-weight: normal; margin: 0; }
     button#startBtn {
       background: var(--primary); color: #fff; border: none; border-radius: 6px;
-      padding: 0.65rem 2rem; font-size: 1rem; cursor: pointer; margin-top: 0.5rem;
+      padding: 0.65rem 2rem; font-size: 1rem; cursor: pointer; margin-top: 0.25rem;
     }
     button#startBtn:disabled { background: #aaa; cursor: not-allowed; }
-    #statusBox { display: none; margin-top: 1rem; }
+    /* BF-MVP1-041: workflow step list */
+    .step-list { list-style: none; padding: 0; margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.3rem 0.1rem; }
+    .step-item { font-size: 0.8rem; color: var(--muted); white-space: nowrap; padding: 0.15rem 0.5rem; border-radius: 4px; }
+    .step-item.done { color: #2e7d32; }
+    .step-item.active { color: var(--primary); font-weight: 700; background: #fff0f0; }
+    .step-item.active-ok { color: #2e7d32; font-weight: 700; background: #f1f8e9; }
+    .step-item.active-warn { color: #e65100; font-weight: 700; background: #fff3e0; }
+    .step-item.sep { color: var(--border); padding: 0.15rem 0; }
+    /* Status text styling */
     .status-label { font-weight: 600; }
-    .progress-bar-outer { background: #eee; border-radius: 4px; height: 10px; margin-top: 0.4rem; }
-    .progress-bar-inner { background: var(--primary); height: 100%; border-radius: 4px; transition: width 0.4s; }
+    .st-ok  { color: #2e7d32; }
+    .st-warn { color: #e65100; }
+    .st-err  { color: var(--primary); }
     #errorMsg { color: var(--primary); font-size: 0.9rem; margin-top: 0.5rem; display: none; }
+    /* BF-MVP1-042: results grid */
     #resultsBox { display: none; }
-    #fileList { list-style: none; padding: 0; margin-top: 0.5rem; }
-    #fileList li { margin-bottom: 0.35rem; }
-    #fileList a { color: #1565c0; }
-    .score-line { font-size: 0.9rem; color: var(--muted); margin-top: 0.4rem; }
+    .info-grid { display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 1rem; font-size: 0.88rem; margin-top: 0.5rem; }
+    .info-key { color: var(--muted); white-space: nowrap; }
+    .warnings-line { font-size: 0.87rem; margin-top: 0.5rem; }
+    .sev-high   { color: #c62828; font-weight: 600; }
+    .sev-medium { color: #e65100; font-weight: 600; }
+    .sev-low    { color: #558b2f; font-weight: 600; }
+    .section-title { font-weight: 700; font-size: 0.88rem; margin-top: 0.75rem; margin-bottom: 0.35rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .file-links { list-style: none; padding: 0; }
+    .file-links li { margin-bottom: 0.35rem; }
+    .file-links a { color: #1565c0; text-decoration: none; }
+    .file-links a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -60,6 +80,7 @@
   Es handelt sich um keine offiziellen LEGO-Produkte oder -Bauanleitungen.
 </div>
 
+<!-- Form card (BF-MVP1-040) -->
 <div class="card">
   <div class="field">
     <label for="prompt">Modellbeschreibung *</label>
@@ -96,30 +117,74 @@
     </div>
   </div>
 
+  <!-- BF-MVP1-040: preferred colours field -->
+  <div class="field">
+    <label for="preferredColors">Bevorzugte Farben</label>
+    <input type="text" id="preferredColors" placeholder="z. B. schwarz, silber, rot (kommagetrennt)" />
+    <div class="hint">Optional – Farbwünsche werden dem Prompt hinzugefügt</div>
+  </div>
+
+  <!-- BF-MVP1-040: local-AI-only checkbox (always active; informational) -->
+  <div class="checkbox-row">
+    <input type="checkbox" id="localAiOnly" checked disabled />
+    <label for="localAiOnly">Nur lokale AI verwenden – kein Cloud-Konto erforderlich (immer aktiv)</label>
+  </div>
+
   <button id="startBtn" type="button">Modell generieren</button>
 </div>
 
-<div class="card" id="statusBox">
+<!-- Status card (BF-MVP1-041) -->
+<div class="card" id="statusBox" style="display:none">
   <div class="status-label">Status: <span id="statusText">–</span></div>
-  <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar" style="width:0%"></div></div>
+  <!-- Named workflow stages -->
+  <ul class="step-list" id="stepList"></ul>
   <div id="errorMsg"></div>
 </div>
 
+<!-- Results card (BF-MVP1-042) -->
 <div class="card" id="resultsBox">
   <strong>Ergebnis</strong>
-  <div class="score-line" id="scoreLine"></div>
-  <ul id="fileList"></ul>
+  <div class="info-grid" id="infoGrid"></div>
+  <div class="warnings-line" id="warningsLine"></div>
+  <div class="section-title">Dateien</div>
+  <ul class="file-links" id="fileList"></ul>
 </div>
 
 <script>
   const API = '';
-  const statusSteps = {
-    Queued: 5, AnalyzingPrompt: 15, PlanningModel: 30,
-    GeneratingBrickGraph: 50, Validating: 65, Repairing: 70,
-    Exporting: 85, Completed: 100, CompletedWithWarnings: 100, Failed: 0
+
+  // BF-MVP1-041: named workflow stages in order
+  const stages = [
+    { key: 'Queued',               label: 'Vorbereitung'        },
+    { key: 'AnalyzingPrompt',      label: 'Promptanalyse'       },
+    { key: 'SelectingTemplate',    label: 'Templateauswahl'     },
+    { key: 'PlanningModel',        label: 'Brickplanung'        },
+    { key: 'GeneratingBrickGraph', label: 'BrickGraph-Erzeugung'},
+    { key: 'Validating',           label: 'Validierung'         },
+    { key: 'Repairing',            label: 'Reparatur'           },
+    { key: 'Exporting',            label: 'Export'              },
+    { key: 'Completed',            label: 'Abgeschlossen'       }
+  ];
+
+  // maps status value → stage index (-1 = failed / unknown)
+  const statusStepIdx = {
+    Queued: 0, AnalyzingPrompt: 1, SelectingTemplate: 2, PlanningModel: 3,
+    GeneratingBrickGraph: 4, Validating: 5, Repairing: 6,
+    Exporting: 7, Completed: 8, CompletedWithWarnings: 8, Failed: -1
   };
 
-  let pollTimer = null;
+  // BF-MVP1-042: priority file order and display labels
+  const FILE_PRIORITY   = ['report.md', 'instructions.md', 'model.mpd', 'parts.csv'];
+  const FILE_LABELS     = {
+    'report.md':        '📊 report.md – Bericht',
+    'instructions.md':  '📋 instructions.md – Bauanleitung',
+    'model.mpd':        '🧱 model.mpd – LDraw-Modell',
+    'parts.csv':        '📦 parts.csv – Teileliste',
+    'brickgraph.json':  '🔧 brickgraph.json',
+    'validation.json':  '✅ validation.json'
+  };
+
+  let pollTimer    = null;
   let currentJobId = null;
 
   document.getElementById('prompt').addEventListener('input', function () {
@@ -128,44 +193,53 @@
 
   document.getElementById('startBtn').addEventListener('click', startGeneration);
 
+  // ── Form submission ──────────────────────────────────────────────────────────
+
   async function startGeneration() {
-    const prompt = document.getElementById('prompt').value.trim();
-    if (!prompt) { alert('Bitte eine Modellbeschreibung eingeben.'); return; }
+    const promptRaw = document.getElementById('prompt').value.trim();
+    if (!promptRaw) { alert('Bitte eine Modellbeschreibung eingeben.'); return; }
+
+    // BF-MVP1-040: append preferred colours to the prompt text
+    const colors = document.getElementById('preferredColors').value.trim();
+    const prompt = colors ? promptRaw + '\n\nBevorzugte Farben: ' + colors : promptRaw;
 
     const targetPartsRaw = document.getElementById('targetParts').value;
-    const difficulty = document.getElementById('difficulty').value || null;
+    const difficulty     = document.getElementById('difficulty').value || null;
 
     const body = {
       prompt,
-      difficulty: difficulty || null,
+      difficulty:  difficulty || null,
       targetParts: targetPartsRaw ? parseInt(targetPartsRaw, 10) : null
     };
 
-    document.getElementById('startBtn').disabled = true;
-    showStatus('Queued');
+    document.getElementById('startBtn').disabled    = true;
     document.getElementById('resultsBox').style.display = 'none';
-    document.getElementById('errorMsg').style.display = 'none';
+    showStatus('Queued');
+    hideError();
 
     try {
       const resp = await fetch(`${API}/api/generation-jobs`, {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body:    JSON.stringify(body)
       });
 
       if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
-        showError(err.error ?? 'Anfrage fehlgeschlagen.');
+        // BF-MVP1-040: read ApiErrorResponse.message (not legacy .error)
+        const err = await resp.json().catch(() => ({ message: `HTTP ${resp.status}` }));
+        showError(err.message ?? 'Anfrage fehlgeschlagen.');
         return;
       }
 
-      const data = await resp.json();
+      const data   = await resp.json();
       currentJobId = data.jobId;
-      pollTimer = setInterval(() => pollJob(currentJobId), 1500);
-    } catch (e) {
+      pollTimer    = setInterval(() => pollJob(currentJobId), 1500);
+    } catch (_) {
       showError('API nicht erreichbar. Ist der BrickForge-Server gestartet?');
     }
   }
+
+  // ── Polling ──────────────────────────────────────────────────────────────────
 
   async function pollJob(jobId) {
     try {
@@ -184,38 +258,137 @@
         showError(job.errorMessage ?? 'Generierung fehlgeschlagen.');
         document.getElementById('startBtn').disabled = false;
       }
-    } catch (_) { /* keep polling */ }
+    } catch (_) { /* keep polling on transient errors */ }
   }
 
-  async function showResults(job) {
-    if (job.validationScore != null) {
-      document.getElementById('scoreLine').textContent =
-        `Validierungsscore: ${(job.validationScore * 100).toFixed(1)} %` +
-        (job.actualParts != null ? ` | ${job.actualParts} Teile` : '');
-    }
+  // ── Results (BF-MVP1-042) ─────────────────────────────────────────────────────
 
-    const filesResp = await fetch(`${API}/api/generation-jobs/${job.jobId}/files`);
-    const files = filesResp.ok ? await filesResp.json() : [];
+  async function showResults(job) {
+    const grid = document.getElementById('infoGrid');
+    grid.innerHTML = '';
+
+    if (job.actualParts != null)
+      addRow(grid, 'Teileanzahl', job.actualParts + (job.targetParts ? ' (Ziel: ' + job.targetParts + ')' : ''));
+
+    if (job.mainColor)   addRow(grid, 'Hauptfarbe',   job.mainColor);
+    if (job.accentColor) addRow(grid, 'Akzentfarbe',  job.accentColor);
+
+    if (job.validationScore != null)
+      addRow(grid, 'Validierungsscore', (job.validationScore * 100).toFixed(1) + ' %');
+
+    // High / Medium / Low issue counts from validation endpoint
+    const warningsEl = document.getElementById('warningsLine');
+    warningsEl.innerHTML = '';
+    try {
+      const vr = await fetch(`${API}/api/generation-jobs/${job.jobId}/validation`);
+      if (vr.ok) {
+        const vd     = await vr.json();
+        const parsed = JSON.parse(vd.rawJson);
+        const issues = parsed.issues ?? [];
+        const hi = issues.filter(i => i.severity === 'High').length;
+        const md = issues.filter(i => i.severity === 'Medium').length;
+        const lo = issues.filter(i => i.severity === 'Low').length;
+        if (hi + md + lo > 0) {
+          warningsEl.innerHTML =
+            'Warnungen: <span class="sev-high">' + hi + '&times; Hoch</span> &nbsp;' +
+            '<span class="sev-medium">' + md + '&times; Mittel</span> &nbsp;' +
+            '<span class="sev-low">' + lo + '&times; Niedrig</span>';
+        } else {
+          warningsEl.textContent = '✅ Keine Warnungen';
+        }
+      }
+    } catch (_) { /* validation summary is optional */ }
+
+    // File links – priority files first, then any remaining files
+    const fr    = await fetch(`${API}/api/generation-jobs/${job.jobId}/files`);
+    const files = fr.ok ? await fr.json() : [];
+    const byName = Object.fromEntries(files.map(f => [f.fileName, f]));
+    const ordered = [
+      ...FILE_PRIORITY.filter(n => byName[n]),
+      ...files.filter(f => !FILE_PRIORITY.includes(f.fileName)).map(f => f.fileName)
+    ];
+
     const list = document.getElementById('fileList');
     list.innerHTML = '';
-    for (const f of files) {
+    for (const name of ordered) {
+      const f  = byName[name];
       const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = `${API}/api/generation-jobs/${job.jobId}/download?fileId=${encodeURIComponent(f.fileId)}`;
-      a.textContent = f.fileName;
+      const a  = document.createElement('a');
+      a.href     = `${API}/api/generation-jobs/${job.jobId}/download?fileId=${encodeURIComponent(f.fileId)}`;
+      a.textContent = FILE_LABELS[name] ?? name;
       a.download = f.fileName;
       li.appendChild(a);
       list.appendChild(li);
     }
 
-    document.getElementById('resultsBox').style.display = files.length ? 'block' : 'none';
+    document.getElementById('resultsBox').style.display = (ordered.length > 0) ? 'block' : 'none';
   }
+
+  function addRow(grid, key, value) {
+    const k = document.createElement('div'); k.className = 'info-key'; k.textContent = key;
+    const v = document.createElement('div'); v.textContent = value;
+    grid.appendChild(k); grid.appendChild(v);
+  }
+
+  // ── Status display (BF-MVP1-041) ─────────────────────────────────────────────
 
   function showStatus(status) {
     document.getElementById('statusBox').style.display = 'block';
-    document.getElementById('statusText').textContent = statusLabel(status);
-    document.getElementById('progressBar').style.width = (statusSteps[status] ?? 0) + '%';
+    const el = document.getElementById('statusText');
+    el.textContent = statusLabel(status);
+    el.className   = statusClass(status);
+    renderStepList(status);
   }
+
+  function renderStepList(status) {
+    const list        = document.getElementById('stepList');
+    const isFailed    = status === 'Failed';
+    const isCompleted = status === 'Completed' || status === 'CompletedWithWarnings';
+    const isWarn      = status === 'CompletedWithWarnings';
+    const currentIdx  = isFailed ? -1 : (statusStepIdx[status] ?? 0);
+
+    list.innerHTML = '';
+    stages.forEach((stage, i) => {
+      // separator arrow between items
+      if (i > 0) {
+        const sep = document.createElement('li');
+        sep.className   = 'step-item sep';
+        sep.textContent = '›';
+        list.appendChild(sep);
+      }
+
+      const li = document.createElement('li');
+      let icon, cls;
+
+      if (isFailed) {
+        icon = '⬜'; cls = 'pending';
+      } else if (i < currentIdx) {
+        icon = '✅'; cls = 'done';
+      } else if (i === currentIdx) {
+        if (isCompleted) {
+          icon = isWarn ? '⚠️' : '✅';
+          cls  = isWarn ? 'active-warn' : 'active-ok';
+        } else {
+          icon = '🔵'; cls = 'active';
+        }
+      } else {
+        icon = '⬜'; cls = 'pending';
+      }
+
+      li.className   = 'step-item ' + cls;
+      li.textContent = icon + ' ' + stage.label;
+      list.appendChild(li);
+    });
+  }
+
+  function statusClass(s) {
+    if (s === 'Completed')            return 'st-ok';
+    if (s === 'CompletedWithWarnings') return 'st-warn';
+    if (s === 'Failed')               return 'st-err';
+    return '';
+  }
+
+  // ── Error display ────────────────────────────────────────────────────────────
 
   function showError(msg) {
     const el = document.getElementById('errorMsg');
@@ -224,13 +397,23 @@
     document.getElementById('startBtn').disabled = false;
   }
 
+  function hideError() {
+    document.getElementById('errorMsg').style.display = 'none';
+  }
+
   function statusLabel(s) {
     const map = {
-      Queued: 'In Warteschlange', AnalyzingPrompt: 'Prompt wird analysiert',
-      PlanningModel: 'Modell wird geplant', GeneratingBrickGraph: 'BrickGraph wird erstellt',
-      Validating: 'Validierung läuft', Repairing: 'Reparatur läuft',
-      Exporting: 'Export läuft', Completed: '✅ Abgeschlossen',
-      CompletedWithWarnings: '⚠️ Abgeschlossen (mit Warnungen)', Failed: '❌ Fehlgeschlagen'
+      Queued:               'In Warteschlange',
+      AnalyzingPrompt:      'Prompt wird analysiert',
+      SelectingTemplate:    'Template wird ausgewählt',
+      PlanningModel:        'Modell wird geplant',
+      GeneratingBrickGraph: 'BrickGraph wird erstellt',
+      Validating:           'Validierung läuft',
+      Repairing:            'Reparatur läuft',
+      Exporting:            'Export läuft',
+      Completed:            '✅ Abgeschlossen',
+      CompletedWithWarnings:'⚠️ Abgeschlossen (mit Warnungen)',
+      Failed:               '❌ Fehlgeschlagen'
     };
     return map[s] ?? s;
   }

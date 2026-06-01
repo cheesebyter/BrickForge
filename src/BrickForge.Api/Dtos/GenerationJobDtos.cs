@@ -33,7 +33,9 @@ public sealed record JobStatusResponse(
     int? ActualParts,
     double? ValidationScore,
     string? ErrorMessage,
-    DateTimeOffset CreatedAt
+    DateTimeOffset CreatedAt,
+    string? MainColor = null,
+    string? AccentColor = null
 );
 
 /// <summary>Metadata for a single generated file (no internal path exposed).</summary>

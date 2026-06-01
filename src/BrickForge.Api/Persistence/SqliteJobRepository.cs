@@ -1,4 +1,6 @@
 using System.Data;
+using System.Text.Json;
+using BrickForge.Core.Agents;
 using BrickForge.Core.Catalog;
 using BrickForge.Core.Jobs;
 using Microsoft.Data.Sqlite;
@@ -67,6 +69,11 @@ public sealed class SqliteJobRepository : IJobRepository, ICatalogRepository, ID
 
         // Migration: add Difficulty to existing databases that pre-date this column.
         TryAddColumn("GenerationJobs", "Difficulty", "TEXT");
+        // Migration: add colour columns (BF-MVP1-042).
+        TryAddColumn("GenerationJobs", "MainColor", "TEXT");
+        TryAddColumn("GenerationJobs", "AccentColor", "TEXT");
+        // Migration: add metrics JSON column (BF-MVP1-044).
+        TryAddColumn("GenerationJobs", "MetricsJson", "TEXT");
     }
 
     private void TryAddColumn(string table, string column, string type)
@@ -188,8 +195,8 @@ public sealed class SqliteJobRepository : IJobRepository, ICatalogRepository, ID
     {
         using var cmd = _connection.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO GenerationJobs (Id, CreatedAt, Prompt, Status, TemplateName, Difficulty, TargetParts, ActualParts, OutputPath, ValidationScore, ErrorMessage)
-            VALUES (@id, @createdAt, @prompt, @status, @templateName, @difficulty, @targetParts, @actualParts, @outputPath, @validationScore, @errorMessage)
+            INSERT INTO GenerationJobs (Id, CreatedAt, Prompt, Status, TemplateName, Difficulty, TargetParts, ActualParts, OutputPath, ValidationScore, ErrorMessage, MainColor, AccentColor, MetricsJson)
+            VALUES (@id, @createdAt, @prompt, @status, @templateName, @difficulty, @targetParts, @actualParts, @outputPath, @validationScore, @errorMessage, @mainColor, @accentColor, @metricsJson)
             """;
         BindJobParams(cmd, job);
         cmd.ExecuteNonQuery();
@@ -207,7 +214,10 @@ public sealed class SqliteJobRepository : IJobRepository, ICatalogRepository, ID
                 ActualParts     = @actualParts,
                 OutputPath      = @outputPath,
                 ValidationScore = @validationScore,
-                ErrorMessage    = @errorMessage
+                ErrorMessage    = @errorMessage,
+                MainColor       = @mainColor,
+                AccentColor     = @accentColor,
+                MetricsJson     = @metricsJson
             WHERE Id = @id
             """;
         cmd.Parameters.AddWithValue("@id", job.Id);
@@ -219,6 +229,11 @@ public sealed class SqliteJobRepository : IJobRepository, ICatalogRepository, ID
         cmd.Parameters.AddWithValue("@outputPath", (object?)job.OutputPath ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@validationScore", (object?)job.ValidationScore ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@errorMessage", (object?)job.ErrorMessage ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@mainColor", (object?)job.MainColor ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@accentColor", (object?)job.AccentColor ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@metricsJson", job.Metrics is not null
+            ? (object)JsonSerializer.Serialize(job.Metrics)
+            : DBNull.Value);
         cmd.ExecuteNonQuery();
     }
 
@@ -278,10 +293,28 @@ public sealed class SqliteJobRepository : IJobRepository, ICatalogRepository, ID
         cmd.Parameters.AddWithValue("@outputPath", (object?)job.OutputPath ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@validationScore", (object?)job.ValidationScore ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@errorMessage", (object?)job.ErrorMessage ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@mainColor", (object?)job.MainColor ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@accentColor", (object?)job.AccentColor ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@metricsJson", job.Metrics is not null
+            ? (object)JsonSerializer.Serialize(job.Metrics)
+            : DBNull.Value);
     }
 
     private static GenerationJob MapJob(SqliteDataReader reader)
     {
+        JobMetrics? metrics = null;
+        if (!reader.IsDBNull("MetricsJson"))
+        {
+            try
+            {
+                metrics = JsonSerializer.Deserialize<JobMetrics>(reader.GetString("MetricsJson"));
+            }
+            catch (JsonException)
+            {
+                // Corrupted JSON — treat as no metrics rather than crashing.
+            }
+        }
+
         return new GenerationJob
         {
             Id = reader.GetString("Id"),
@@ -294,7 +327,10 @@ public sealed class SqliteJobRepository : IJobRepository, ICatalogRepository, ID
             ActualParts = reader.IsDBNull("ActualParts") ? null : reader.GetInt32("ActualParts"),
             OutputPath = reader.IsDBNull("OutputPath") ? null : reader.GetString("OutputPath"),
             ValidationScore = reader.IsDBNull("ValidationScore") ? null : reader.GetDouble("ValidationScore"),
-            ErrorMessage = reader.IsDBNull("ErrorMessage") ? null : reader.GetString("ErrorMessage")
+            ErrorMessage = reader.IsDBNull("ErrorMessage") ? null : reader.GetString("ErrorMessage"),
+            MainColor = reader.IsDBNull("MainColor") ? null : reader.GetString("MainColor"),
+            AccentColor = reader.IsDBNull("AccentColor") ? null : reader.GetString("AccentColor"),
+            Metrics = metrics
         };
     }
 

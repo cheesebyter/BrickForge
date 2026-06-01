@@ -65,6 +65,8 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
         {
             _logger.LogInformation("Job {JobId} started.", jobId);
 
+            var agentMetricsList = new List<AgentMetrics>();
+
             // BF-MVP1-019 §19.5: Validate prompt length before any AI call.
             if (job.Prompt.Length > _generationOptions.MaxPromptLength)
             {
@@ -79,9 +81,21 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
             await _jobs.UpdateAsync(job, cancellationToken);
 
             _logger.LogDebug("Prompt analysis starting for job {JobId}.", jobId);
+            var stageStart = DateTimeOffset.UtcNow;
             var sw = Stopwatch.StartNew();
             var analysisResult = await _promptAnalyzer.AnalyzeAsync(job.Prompt, cancellationToken);
             sw.Stop();
+            var stageEnd = DateTimeOffset.UtcNow;
+            agentMetricsList.Add(new AgentMetrics
+            {
+                AgentName = "PromptAnalysisAgent",
+                StartTime = stageStart,
+                EndTime = stageEnd,
+                LlmCalls = analysisResult.IsSuccess && !(analysisResult.Value?.UsedFallback ?? true) ? 1 : 0,
+                Retries = 0,
+                Success = analysisResult.IsSuccess,
+                Confidence = analysisResult.IsSuccess ? 1.0 : null
+            });
             _logger.LogDebug("Prompt analysis completed in {ElapsedMs} ms.", sw.ElapsedMilliseconds);
             if (!analysisResult.IsSuccess)
             {
@@ -103,14 +117,27 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
             _logger.LogInformation("Prompt analyzed. Model: {ModelName}, Parts: {Parts}",
                 analysis.ModelName, analysis.TargetParts);
 
-            // Step 2: Plan model (select template)
-            job.Status = JobStatus.PlanningModel;
-            job.TargetParts = analysis.TargetParts;
-            job.TemplateName = analysis.ModelCategory;
+            // Store colours extracted from prompt analysis (BF-MVP1-042).
+            job.MainColor = analysis.MainColor;
+            job.AccentColor = analysis.AccentColor;
+
+            // Step 2: Select template
+            job.Status = JobStatus.SelectingTemplate;
             await _jobs.UpdateAsync(job, cancellationToken);
 
+            stageStart = DateTimeOffset.UtcNow;
             var template = _templateRegistry.FindTemplate(analysis.ModelCategory)
                            ?? _templateRegistry.FindTemplate("small_machine");
+            stageEnd = DateTimeOffset.UtcNow;
+            agentMetricsList.Add(new AgentMetrics
+            {
+                AgentName = "TemplateSelectionAgent",
+                StartTime = stageStart,
+                EndTime = stageEnd,
+                LlmCalls = 0,
+                Retries = 0,
+                Success = template is not null
+            });
 
             if (template is null)
             {
@@ -120,22 +147,52 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
 
             _logger.LogInformation("Template selected: {TemplateName} for job {JobId}.", template.TemplateId, jobId);
 
+            // Step 3: Plan model
+            job.Status = JobStatus.PlanningModel;
+            job.TargetParts = analysis.TargetParts;
+            job.TemplateName = analysis.ModelCategory;
+            await _jobs.UpdateAsync(job, cancellationToken);
+
             // Step 3: Generate BrickGraph
             job.Status = JobStatus.GeneratingBrickGraph;
             await _jobs.UpdateAsync(job, cancellationToken);
 
+            stageStart = DateTimeOffset.UtcNow;
             sw.Restart();
             var graph = _generator.Generate(analysis, template);
             sw.Stop();
+            stageEnd = DateTimeOffset.UtcNow;
+            agentMetricsList.Add(new AgentMetrics
+            {
+                AgentName = "BrickGraphGeneratorAgent",
+                StartTime = stageStart,
+                EndTime = stageEnd,
+                LlmCalls = 0,
+                Retries = 0,
+                Success = true,
+                Confidence = 1.0
+            });
             _logger.LogDebug("BrickGraph generation completed in {ElapsedMs} ms.", sw.ElapsedMilliseconds);
 
             // Step 4: Validate
             job.Status = JobStatus.Validating;
             await _jobs.UpdateAsync(job, cancellationToken);
 
+            stageStart = DateTimeOffset.UtcNow;
             sw.Restart();
             var validation = _validator.Validate(graph, template.MaxParts > 0 ? template.MaxParts : null);
             sw.Stop();
+            stageEnd = DateTimeOffset.UtcNow;
+            agentMetricsList.Add(new AgentMetrics
+            {
+                AgentName = "ValidationAgent",
+                StartTime = stageStart,
+                EndTime = stageEnd,
+                LlmCalls = 0,
+                Retries = 0,
+                Success = true,
+                FinalScore = validation.Score
+            });
             _logger.LogDebug("Validation completed in {ElapsedMs} ms.", sw.ElapsedMilliseconds);
             var wasRepaired = false;
 
@@ -147,9 +204,11 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
 
                 _logger.LogInformation("Job {JobId}: validation failed, attempting repair.", jobId);
 
+                stageStart = DateTimeOffset.UtcNow;
                 var repairCtx = new AgentContext { JobId = jobId };
                 var repairReq = new RepairRequest(graph, template, template.MaxParts > 0 ? template.MaxParts : 80);
                 var repairResult = await _repairAgent.RunAsync(repairReq, repairCtx, cancellationToken);
+                stageEnd = DateTimeOffset.UtcNow;
 
                 if (repairResult.IsSuccess)
                 {
@@ -162,6 +221,17 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
                 {
                     _logger.LogWarning("Job {JobId}: repair agent failed: {Error}", jobId, repairResult.ErrorMessage);
                 }
+
+                agentMetricsList.Add(new AgentMetrics
+                {
+                    AgentName = "RepairAgent",
+                    StartTime = stageStart,
+                    EndTime = stageEnd,
+                    LlmCalls = 0,
+                    Retries = 0,
+                    Success = repairResult.IsSuccess,
+                    FinalScore = validation.Score
+                });
             }
 
             job.ValidationScore = validation.Score;
@@ -233,6 +303,19 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
             else
                 _logger.LogWarning("HTML instructions export skipped: {Error}", htmlResult.ErrorMessage);
 
+            // Build job metrics (BF-MVP1-044)
+            totalStopwatch.Stop();
+            var jobMetrics = new JobMetrics
+            {
+                JobStartTime = job.CreatedAt,
+                JobEndTime = DateTimeOffset.UtcNow,
+                TotalLlmCalls = agentMetricsList.Sum(m => m.LlmCalls),
+                TotalRetries = agentMetricsList.Sum(m => m.Retries),
+                JobSuccess = true,
+                AgentBreakdown = agentMetricsList.AsReadOnly()
+            };
+            job.Metrics = jobMetrics;
+
             // report.md
             var reportData = new GenerationReportData
             {
@@ -242,7 +325,9 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
                 ValidationResult = validation,
                 GeneratedFiles = generatedFileNames.AsReadOnly(),
                 Timestamp = DateTimeOffset.UtcNow,
-                TemplateName = template.TemplateId
+                TemplateName = template.TemplateId,
+                AgentMetrics = agentMetricsList.AsReadOnly(),
+                JobMetrics = jobMetrics
             };
 
             var reportResult = new ReportExporter().Export(graph, reportData);
@@ -278,7 +363,6 @@ public sealed class GenerationPipelineService : IGenerationPipelineService
                 : JobStatus.Completed;
             await _jobs.UpdateAsync(job, cancellationToken);
 
-            totalStopwatch.Stop();
             _logger.LogInformation("Job {JobId} completed with {FileCount} file(s) in {ElapsedMs} ms.",
                 jobId, generatedFileNames.Count, totalStopwatch.ElapsedMilliseconds);
         }

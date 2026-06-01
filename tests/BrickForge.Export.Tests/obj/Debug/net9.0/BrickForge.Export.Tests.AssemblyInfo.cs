@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BrickForge.Export.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+80b7d0f15ab84e4e07d683fb0b38ba194f34739c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f99571ca9bea96a3dd95fcc4ade9e88760fd3408")]
 [assembly: System.Reflection.AssemblyProductAttribute("BrickForge.Export.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BrickForge.Export.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

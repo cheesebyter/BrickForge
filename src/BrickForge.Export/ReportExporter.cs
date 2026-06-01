@@ -143,6 +143,37 @@ public sealed class ReportExporter
         }
         sb.AppendLine();
 
+        // Agent metrics
+        if (data.AgentMetrics.Count > 0 || data.JobMetrics is not null)
+        {
+            sb.AppendLine("## Agentenmetriken");
+            sb.AppendLine();
+
+            if (data.JobMetrics is { } jm)
+            {
+                sb.AppendLine($"- **Gesamtdauer:** {jm.TotalDurationMs} ms");
+                sb.AppendLine($"- **LLM-Aufrufe gesamt:** {jm.TotalLlmCalls}");
+                sb.AppendLine($"- **Retries gesamt:** {jm.TotalRetries}");
+                sb.AppendLine($"- **Erfolg:** {(jm.JobSuccess ? "Ja" : "Nein")}");
+                sb.AppendLine();
+            }
+
+            if (data.AgentMetrics.Count > 0)
+            {
+                sb.AppendLine("| Agent | Dauer (ms) | LLM-Aufrufe | Retries | Erfolg | Konfidenz |");
+                sb.AppendLine("|-------|-----------|-------------|---------|--------|-----------|");
+                foreach (var m in data.AgentMetrics)
+                {
+                    var conf = m.Confidence.HasValue
+                        ? m.Confidence.Value.ToString("F2", CultureInfo.InvariantCulture)
+                        : "–";
+                    var ok = m.Success ? "Ja" : "Nein";
+                    sb.AppendLine($"| {m.AgentName} | {m.DurationMs} | {m.LlmCalls} | {m.Retries} | {ok} | {conf} |");
+                }
+                sb.AppendLine();
+            }
+        }
+
         // Interpretation hint
         sb.AppendLine("## Stilisierte Interpretation");
         sb.AppendLine();
