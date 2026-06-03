@@ -15,6 +15,10 @@ namespace BrickForge.BrickGraph.Generation;
 ///   X = left/right (stud columns, 20 units per stud)
 ///   Y = up/down, positive = DOWN (plate = 8 units, brick = 24 units)
 ///   Z = front/back (stud rows, 20 units per stud)
+///
+/// Part origin = stud surface (top face of part body, base of studs).
+/// The part body hangs DOWNWARD (positive Y) from the origin.
+/// To stack part B on part A: B.Y = A.Y - B.Height (so B.bottom == A.stud surface).
 /// </summary>
 public sealed class SmallMachineGenerator
 {
@@ -58,7 +62,9 @@ public sealed class SmallMachineGenerator
 
         // ── Steps 2-N: Main body brick layers ─────────────────────────────────
         int bodyLayers = Math.Max(2, template.HeightLayers);
-        float bodyBaseY = -PlateHeight; // just above the base layer
+        // First brick sits on the base plate: brick.Y = basePlate.Y - BrickHeight
+        // basePlate.Y = -PlateHeight, so bodyBaseY = -PlateHeight - BrickHeight = -32
+        float bodyBaseY = -(PlateHeight + BrickHeight);
         for (int layer = 0; layer < bodyLayers; layer++)
         {
             float layerY = bodyBaseY - layer * BrickHeight;
@@ -68,7 +74,9 @@ public sealed class SmallMachineGenerator
 
         // ── Step bodyLayers+2: Front panel tiles ──────────────────────────────
         int frontStep = bodyLayers + 2;
-        float frontPanelY = bodyBaseY - bodyLayers * BrickHeight;
+        // Tile sits on top of last body layer: tile.Y = lastBrick.Y - PlateHeight
+        // lastBrick.Y = bodyBaseY - (bodyLayers-1)*BrickHeight
+        float frontPanelY = bodyBaseY - (bodyLayers - 1) * BrickHeight - PlateHeight;
         var frontParts = BuildFrontPanel(template, accentColor, frontPanelY, ref partIndex);
         RegisterParts(graph, frontParts, stepPartIds, frontStep);
 
@@ -106,7 +114,8 @@ public sealed class SmallMachineGenerator
     {
         var def = _registry.FindPart("3023")!; // Plate 1×2
         var parts = new List<BrickPartInstance>();
-        const float y = 0f;
+        // Base plate stud surface: Y = -PlateHeight (body bottom at Y=0 = floor)
+        const float y = -PlateHeight;
 
         for (int row = 0; row < template.DepthStuds; row++)
         {
@@ -136,10 +145,14 @@ public sealed class SmallMachineGenerator
 
         for (int row = 0; row < rowsNeeded; row++)
         {
-            float z = row * 4 * StudSize + StudSize * 2; // center of 4-deep brick
+            // Center a 4-stud-long brick so its stud holes land at Z=0,20,40,60
+            // (matching the base plate stud positions at Z=0,20,40,60)
+            float z = row * 4 * StudSize + StudSize * 1.5f;
             for (int col = 0; col < bricksPerRow; col++)
             {
-                float x = col * StudSize;
+                // Offset by half a stud so stud holes land at X=10,30,50,...
+                // matching the base Plate 1×2 stud positions (2-stud direction in X)
+                float x = col * StudSize + StudSize / 2f;
                 parts.Add(MakePart(def, color, x, layerY, z, step, ref idx));
             }
         }
@@ -176,7 +189,8 @@ public sealed class SmallMachineGenerator
         for (int col = 0; col < plates; col++)
         {
             float x = col * 2 * StudSize + StudSize;
-            float z = StudSize * 2;
+            // Same Z center as body bricks so anti-stud holes align with body top studs
+            float z = StudSize * 1.5f;
             parts.Add(MakePart(def, color, x, topY, z, step, ref idx));
         }
         return parts;
@@ -190,8 +204,9 @@ public sealed class SmallMachineGenerator
         int step = template.HeightLayers + 4;
         return
         [
-            MakePart(def, color, 0f, detailY, 0f, step, ref idx),
-            MakePart(def, color, StudSize, detailY, 0f, step, ref idx)
+            // Align to stud positions X=10 and X=30 on the front face (Z=0)
+            MakePart(def, color, StudSize / 2f,         detailY, 0f, step, ref idx),
+            MakePart(def, color, StudSize + StudSize / 2f, detailY, 0f, step, ref idx)
         ];
     }
 
