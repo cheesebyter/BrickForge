@@ -12,13 +12,19 @@ namespace BrickForge.BrickGraph.Generation;
 /// machine model (base → body layers → front panel → top → optional detail).
 ///
 /// LDraw coordinate convention used here:
-///   X = left/right (stud columns, 20 units per stud)
-///   Y = up/down, positive = DOWN (plate = 8 units, brick = 24 units)
-///   Z = front/back (stud rows, 20 units per stud)
+///   X = left/right (stud columns, 20 LDU per stud)
+///   Y = up/down, positive = DOWN (plate = 8 LDU, brick = 24 LDU)
+///   Z = front/back (stud rows, 20 LDU per stud)
 ///
-/// Part origin = stud surface (top face of part body, base of studs).
+/// Part origin = stud surface (top face of part body).
 /// The part body hangs DOWNWARD (positive Y) from the origin.
-/// To stack part B on part A: B.Y = A.Y - B.Height (so B.bottom == A.stud surface).
+/// To stack part B on part A: B.Y = A.Y - B.Height.
+///
+/// Stud alignment strategy:
+///   Base uses Plate 1×2 (3023): 2 studs in X, 1 stud in Z.
+///   Columns at X = 20, 60, 100  (centers of 40-LDU-wide plates).
+///   Rows    at Z = 0, 20, 40, 60 (centers of 20-LDU-deep plates).
+///   Body uses Brick 1×2 (3004): identical X/Z footprint → perfect stud alignment.
 /// </summary>
 public sealed class SmallMachineGenerator
 {
@@ -82,7 +88,10 @@ public sealed class SmallMachineGenerator
 
         // ── Step bodyLayers+3: Top plates ─────────────────────────────────────
         int topStep = frontStep + 1;
-        float topY = frontPanelY - PlateHeight;
+        // Top plates sit on the SAME body surface as the front panel tiles, covering
+        // the remaining Z rows (rows 1..depth-1). frontPanelY is already the correct
+        // Y for parts resting on the body top (body.Y - PlateHeight).
+        float topY = frontPanelY;
         var topParts = BuildTop(template, mainColor, topY, ref partIndex);
         RegisterParts(graph, topParts, stepPartIds, topStep);
 
@@ -130,29 +139,28 @@ public sealed class SmallMachineGenerator
         return parts;
     }
 
-    /// <summary>One layer of Brick 1×4 (3010) filling the body width.</summary>
+    /// <summary>
+    /// One layer of Brick 1×2 (3004) filling the body footprint.
+    ///
+    /// Uses the SAME X/Z grid as the base plates so every brick's anti-stud
+    /// holes sit directly above the plate (or previous-layer brick) studs:
+    ///   X columns: 20, 60, 100  (WidthStuds/2 columns of 2-stud-wide bricks)
+    ///   Z rows   : 0, 20, 40, 60  (DepthStuds rows of 1-stud-deep bricks)
+    /// </summary>
     private List<BrickPartInstance> BuildBodyLayer(
         BrickModelTemplate template, string color, int layer, float layerY, ref int idx)
     {
-        var def = _registry.FindPart("3010")!; // Brick 1×4
+        var def = _registry.FindPart("3004")!; // Brick 1×2 — same footprint as Plate 1×2
         var parts = new List<BrickPartInstance>();
         int step = 2 + layer;
+        int cols = template.WidthStuds / 2; // e.g. 6/2 = 3 columns
 
-        // Place rows: each brick covers 4 studs in Z direction
-        int bricksPerRow = template.WidthStuds; // 1 wide
-        int rowsNeeded = template.DepthStuds / 4; // each brick is 4 deep
-        if (rowsNeeded == 0) rowsNeeded = 1;
-
-        for (int row = 0; row < rowsNeeded; row++)
+        for (int row = 0; row < template.DepthStuds; row++)
         {
-            // Center a 4-stud-long brick so its stud holes land at Z=0,20,40,60
-            // (matching the base plate stud positions at Z=0,20,40,60)
-            float z = row * 4 * StudSize + StudSize * 1.5f;
-            for (int col = 0; col < bricksPerRow; col++)
+            float z = row * StudSize;                    // 0, 20, 40, 60
+            for (int col = 0; col < cols; col++)
             {
-                // Offset by half a stud so stud holes land at X=10,30,50,...
-                // matching the base Plate 1×2 stud positions (2-stud direction in X)
-                float x = col * StudSize + StudSize / 2f;
+                float x = col * 2 * StudSize + StudSize; // 20, 60, 100
                 parts.Add(MakePart(def, color, x, layerY, z, step, ref idx));
             }
         }
@@ -177,36 +185,49 @@ public sealed class SmallMachineGenerator
         return parts;
     }
 
-    /// <summary>Row of Plate 2×4 (3020) covering the top.</summary>
+    /// <summary>
+    /// Top surface: Plate 1×2 (3023) covering all rows except the front row (Z=0),
+    /// which is covered by front-panel tiles.
+    ///
+    /// All top plates share the same Y as the front panel tiles — they sit directly
+    /// on the last body layer at the same elevation.
+    /// </summary>
     private List<BrickPartInstance> BuildTop(
         BrickModelTemplate template, string color, float topY, ref int idx)
     {
-        var def = _registry.FindPart("3020")!; // Plate 2×4
+        var def = _registry.FindPart("3023")!; // Plate 1×2
         var parts = new List<BrickPartInstance>();
         int step = template.HeightLayers + 3;
+        int cols = template.WidthStuds / 2;
 
-        int plates = template.WidthStuds / 2;
-        for (int col = 0; col < plates; col++)
+        // Start at row 1: row 0 (Z=0) is covered by the front panel tiles.
+        for (int row = 1; row < template.DepthStuds; row++)
         {
-            float x = col * 2 * StudSize + StudSize;
-            // Same Z center as body bricks so anti-stud holes align with body top studs
-            float z = StudSize * 1.5f;
-            parts.Add(MakePart(def, color, x, topY, z, step, ref idx));
+            float z = row * StudSize; // 20, 40, 60
+            for (int col = 0; col < cols; col++)
+            {
+                float x = col * 2 * StudSize + StudSize; // 20, 60, 100
+                parts.Add(MakePart(def, color, x, topY, z, step, ref idx));
+            }
         }
         return parts;
     }
 
-    /// <summary>Two Plate 1×1 (3024) detail pieces.</summary>
+    /// <summary>
+    /// Two Plate 1×1 (3024) detail pieces on the top surface.
+    /// Placed at Z=20 (first top-plate row) at X=10, X=30, which are the two
+    /// stud positions of the leftmost top plate at X=20.
+    /// </summary>
     private List<BrickPartInstance> BuildDetail(
         BrickModelTemplate template, string color, float detailY, ref int idx)
     {
         var def = _registry.FindPart("3024")!; // Plate 1×1
         int step = template.HeightLayers + 4;
+        const float z = StudSize; // Z=20 (first top-plate row)
         return
         [
-            // Align to stud positions X=10 and X=30 on the front face (Z=0)
-            MakePart(def, color, StudSize / 2f,         detailY, 0f, step, ref idx),
-            MakePart(def, color, StudSize + StudSize / 2f, detailY, 0f, step, ref idx)
+            MakePart(def, color, StudSize / 2f,            detailY, z, step, ref idx), // X=10
+            MakePart(def, color, StudSize + StudSize / 2f, detailY, z, step, ref idx)  // X=30
         ];
     }
 
